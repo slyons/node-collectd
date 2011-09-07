@@ -1,0 +1,17 @@
+{
+  "author": "Scott Lyons <scottalyons@gmail.com>",
+  "name": "collectd",
+  "description": "A NodeJS module for receiving and parsing the CollectD binary protocol",
+  "version": "0.0.0",
+  "repository": {
+    "url": ""
+  },
+  "engines": {
+    "node": "~v0.4.11"
+  },
+  "main": "./lib/collectd",
+  "dependencies": {
+    "ctype":"0.0.3"
+  },
+  "devDependencies": {}
+}
