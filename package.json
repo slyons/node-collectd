@@ -2,7 +2,7 @@
   "author": "Scott Lyons <scottalyons@gmail.com>",
   "name": "collectd",
   "description": "A NodeJS module for receiving and parsing the CollectD binary protocol",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "repository": {
     "type": "git",
     "url": "git://github.com/slyons/node-collectd.git"
