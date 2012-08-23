@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/slyons/node-collectd.png)](http://travis-ci.org/slyons/node-collectd)
 node-collectd
 =============
 
