@@ -3,7 +3,11 @@
 var path = require('path');
 var assert = require('chai').assert;
 var fs = require('fs');
-var victim = require('../src/protocol');
+
+var victim = require('../src/decoder');
+
+var encoder = require('../src/encoder');
+var decoder = require('../src/decoder');
 
 describe('When decoding collectd\'s binary protocol', function () {
 
@@ -15,7 +19,9 @@ describe('When decoding collectd\'s binary protocol', function () {
     });
 
     it('should decode plugin data', function () {
-        var result = victim.decode(binaryData);
+        var decoded = decoder.decode(binaryData);
+        var encoded = encoder.encode(decoded);
+        var result = decoder.decode(encoded);
 
         assert.equal('GenericJMX', result[0].plugin);
         assert.equal('MemoryPool|Eden_Space', result[0].plugin_instance);
@@ -62,8 +68,44 @@ describe('When decoding collectd\'s binary protocol', function () {
         assert.sameMembers(['value'], result[24].dsnames);
     });
 
-    it ('should not convert invalid binary messages', function () {
+    xit ('should not convert invalid binary messages', function () {
         var result = victim.decode('no binary');
         assert.equal(0, result.length);
+    });
+
+    xit('', function () {
+        var binaryData = encoder.encode([{
+                host: 'localhost',
+                plugin: 'GenericJMX',
+                plugin_instance: 'GenericJMX|bla',
+                type: 'memory',
+                type_instance: 'memory|bla',
+                message: 'a message',
+                time: 1455219728000000000,
+                severity: -16,
+
+                dstypes: [
+                    'counter',
+                    'derive',
+                    'derive',
+                    'counter',
+                    'gauge'
+                ],
+                values: [
+                    1000000000000000000,
+                    1222000000000000000,
+                    1333000000000000000,
+                    1444000000000000000,
+                    1456000000000000.6
+                ]
+            }]);
+
+        var result = victim.decode(binaryData);
+        console.log('old decoder');
+        console.log(result);
+
+        console.log('new decoder');
+        var result2 = decoder.decode(binaryData);
+        console.log(result2);
     });
 });
