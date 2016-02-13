@@ -5,9 +5,7 @@ var assert = require('chai').assert;
 var fs = require('fs');
 
 var victim = require('../src/decoder');
-
-var encoder = require('../src/encoder');
-var decoder = require('../src/decoder');
+var encoder = require('../src/encoder');;
 
 describe('When decoding collectd\'s binary protocol', function () {
 
@@ -15,13 +13,13 @@ describe('When decoding collectd\'s binary protocol', function () {
 
     /*jshint -W117 */
     before(function () {
-        binaryData = fs.readFileSync(path.resolve(__dirname, './collectd-mock-data.bin'));
+        var mockData = fs.readFileSync(path.resolve(__dirname, './collectd-mock-data.bin'));
+        var decoded = victim.decode(mockData);
+        binaryData = encoder.encode(decoded);
     });
 
     it('should decode plugin data', function () {
-        var decoded = decoder.decode(binaryData);
-        var encoded = encoder.encode(decoded);
-        var result = decoder.decode(encoded);
+        var result = victim.decode(binaryData);
 
         assert.equal('GenericJMX', result[0].plugin);
         assert.equal('MemoryPool|Eden_Space', result[0].plugin_instance);
@@ -82,7 +80,7 @@ describe('When decoding collectd\'s binary protocol', function () {
                 type_instance: 'memory|bla',
                 message: 'a message',
                 time: 1455219728000000000,
-                severity: -16,
+                severity: 16,
 
                 dstypes: [
                     'counter',
@@ -105,7 +103,7 @@ describe('When decoding collectd\'s binary protocol', function () {
         console.log(result);
 
         console.log('new decoder');
-        var result2 = decoder.decode(binaryData);
+        var result2 = victim.decode(binaryData);
         console.log(result2);
     });
 });

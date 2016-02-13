@@ -13,7 +13,10 @@ var HIGH_RESOLUTION_DIVIDER = 1000000000;
  * @returns {*}
  */
 function decodeHeader(buffer, offset) {
-    return protocol.bigParser.readData(protocol.headerDefinition, buffer, offset).header;
+    var type = ctype.ruint16(buffer, 'big', offset);
+    var length = ctype.ruint16(buffer, 'big', offset + 2);
+
+    return {type: type, length: length};
 }
 
 /**
@@ -24,9 +27,15 @@ function decodeHeader(buffer, offset) {
  * @returns {string}
  */
 function decodeStringPart(buffer, offset, partLen) {
-    var definition = protocol.buildStringTypeDefinition(partLen - protocol.HEADER_SIZE);
-    var decoded = protocol.bigParser.readData(definition, buffer, protocol.HEADER_SIZE + offset).value.toString();
-    return decoded.substring(0, decoded.length - 1);
+    var stringOffset = protocol.HEADER_SIZE + offset;
+
+    var decoded = '';
+    for (var i = 0; i < (partLen - 5); i++) {
+        decoded = decoded.concat(String.fromCharCode(ctype.rsint8(buffer, 'big', stringOffset)));
+        stringOffset++;
+    }
+
+    return decoded;
 }
 
 /**
@@ -50,7 +59,7 @@ function to64(val) {
  * @returns {*}
  */
 function decodeNumericPart(buffer, offset) {
-    return to64(protocol.bigParser.readData(protocol.numericDefinition, buffer, protocol.HEADER_SIZE + offset).value);
+    return to64(ctype.rsint64(buffer, 'big', protocol.HEADER_SIZE + offset));
 }
 
 /**
@@ -70,7 +79,7 @@ function decodeHighResolutionPart(buffer, offset) {
  * @returns {*}
  */
 function decodeValuesSize(buffer, offset) {
-    return protocol.bigParser.readData(protocol.valuesSizeDefinition, buffer, offset + protocol.HEADER_SIZE).value;
+    return ctype.ruint16(buffer, 'big', offset + protocol.HEADER_SIZE);
 }
 
 /**
@@ -80,7 +89,7 @@ function decodeValuesSize(buffer, offset) {
  * @returns {*}
  */
 function decodeValueType(buffer, offset) {
-    return protocol.bigParser.readData(protocol.valueTypeDefinition, buffer, offset).value;
+    return ctype.ruint8(buffer, 'big', offset);
 }
 
 /**
@@ -90,7 +99,7 @@ function decodeValueType(buffer, offset) {
  * @returns {{value: *, type: string}}
  */
 function decodeCounter(buffer, offset) {
-    var counter = protocol.bigParser.readData(protocol.counterDefinition, buffer, offset).value;
+    var counter = ctype.ruint64(buffer, 'big', offset);
     return {value: to64(counter), type: 'counter'};
 }
 
@@ -101,7 +110,7 @@ function decodeCounter(buffer, offset) {
  * @returns {{value: *, type: string}}
  */
 function decodeDerive(buffer, offset) {
-    var derive = protocol.bigParser.readData(protocol.deriveDefinition, buffer, offset).value;
+    var derive = ctype.rsint64(buffer, 'big', offset);
     return {value: to64(derive), type: 'derive'};
 }
 
@@ -112,7 +121,7 @@ function decodeDerive(buffer, offset) {
  * @returns {{value: *, type: string}}
  */
 function decodeGauge(buffer, offset) {
-    var gauge = protocol.littleParser.readData(protocol.gaugeDefinition, buffer, offset).value;
+    var gauge = ctype.rdouble(buffer, 'little', offset);
     return {value: gauge, type: 'gauge'};
 }
 
@@ -123,7 +132,7 @@ function decodeGauge(buffer, offset) {
  * @returns {{value: *, type: string}}
  */
 function decodeAbsolute(buffer, offset) {
-    var absolute = protocol.bigParser.readData(protocol.absoluteDefinition, buffer, offset).value;
+    var absolute = ctype.ruint64(buffer, 'big', offset);
     return {value: to64(absolute), type: 'absolute'};
 }
 
@@ -155,8 +164,8 @@ function decodeValuesPart(buffer, offset) {
     // Decode values size
     var numberOfValues = decodeValuesSize(buffer, offset);
 
-    var typeOffset = offset + protocol.HEADER_SIZE + protocol.LENGTH_SIZE;
-    var valuesOffset = offset + protocol.HEADER_SIZE + protocol.LENGTH_SIZE + numberOfValues;
+    var typeOffset = offset + protocol.HEADER_AND_LENGTH_SIZE;
+    var valuesOffset = offset + protocol.HEADER_AND_LENGTH_SIZE + numberOfValues;
 
     // Decode types
     for (var i = 0; i < numberOfValues; i++) {
@@ -169,7 +178,7 @@ function decodeValuesPart(buffer, offset) {
         values.dsnames.push('value');
 
         typeOffset++;
-        valuesOffset += 8;
+        valuesOffset += protocol.VALUE_SIZE;
     }
 
     return values;
@@ -210,6 +219,7 @@ function getPartDecoder(partType) {
  * @returns {Array}
  */
 exports.decode = function (buffer) {
+
     var metrics = [];
 
     var offset = 0;

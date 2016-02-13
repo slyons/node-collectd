@@ -1,7 +1,5 @@
 'use strict';
 
-var ctype = require("ctype");
-
 // Message kinds
 var TYPE_HOST = 0x0000;
 var TYPE_TIME = 0x0001;
@@ -32,22 +30,13 @@ var NUM_PART_SIZE = 12;
 var VALUE_NUMBER_SIZE = 2;
 var VALUE_SIZE = 8;
 
-var headerDefinition = [{header: {type: 'header_t'}}];
-var numericDefinition = [{value: {type: 'int64_t'}}];
-var valuesSizeDefinition = [{value: {type: 'uint16_t'}}];
-var valueTypeDefinition = [{value: {type: 'uint8_t'}}];
-var counterDefinition = [{value: {type: 'uint64_t'}}];
-var gaugeDefinition = [{value: {type: 'double'}}];
-var deriveDefinition = [{value: {type: 'int64_t'}}];
-var absoluteDefinition = [{value: {type: 'uint64_t'}}];
+// Combined sizes
+var HEADER_AND_LENGTH_SIZE = HEADER_SIZE + LENGTH_SIZE;
+var VALUE_NUMBER_AND_VALUE_SIZE = VALUE_NUMBER_SIZE + VALUE_SIZE;
+var HEADER_AND_NUM_PART_SIZE = HEADER_SIZE + NUM_PART_SIZE;
 
-var littleParser = new ctype.Parser({endian: 'little'});
-
-var bigParser = new ctype.Parser({endian: 'big'});
-bigParser.typedef('header_t', [
-    {type: {type: 'uint16_t'}},
-    {length: {type: 'uint16_t'}}
-]);
+var MAX_BYTES = 16;
+var HALF_BYTES = 8;
 
 exports.TYPE_HOST = TYPE_HOST;
 exports.TYPE_TIME = TYPE_TIME;
@@ -71,27 +60,11 @@ exports.NULL_BYTE_SIZE = NULL_BYTE_SIZE;
 exports.NUM_PART_SIZE = NUM_PART_SIZE;
 exports.VALUE_NUMBER_SIZE = VALUE_NUMBER_SIZE;
 exports.VALUE_SIZE = VALUE_SIZE;
-
-exports.headerDefinition = headerDefinition;
-exports.numericDefinition = numericDefinition;
-exports.valuesSizeDefinition = valuesSizeDefinition;
-exports.valueTypeDefinition = valueTypeDefinition;
-exports.counterDefinition = counterDefinition;
-exports.gaugeDefinition = gaugeDefinition;
-exports.deriveDefinition = deriveDefinition;
-exports.absoluteDefinition = absoluteDefinition;
-
-exports.littleParser = littleParser;
-exports.bigParser = bigParser;
-
-/**
- *
- * @param len
- * @returns {{value: {type: string}}[]}
- */
-exports.buildStringTypeDefinition = function (len) {
-    return [{ value: {type: 'char[' + (len) + ']'} }];
-};
+exports.HEADER_AND_LENGTH_SIZE = HEADER_AND_LENGTH_SIZE;
+exports.VALUE_NUMBER_AND_VALUE_SIZE = VALUE_NUMBER_AND_VALUE_SIZE;
+exports.HEADER_AND_NUM_PART_SIZE = HEADER_AND_NUM_PART_SIZE;
+exports.MAX_BYTES = MAX_BYTES;
+exports.HALF_BYTES = HALF_BYTES;
 
 /**
  *

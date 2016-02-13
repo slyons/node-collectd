@@ -1,16 +1,7 @@
 'use strict';
 
 var protocol = require('./definition');
-
-/**
- *
- * @param type
- * @param len
- * @returns {*[]}
- */
-function buildHeader(type, len) {
-    return [[type, protocol.HEADER_SIZE + len]];
-}
+var ctype = require('ctype');
 
 /**
  *
@@ -19,31 +10,20 @@ function buildHeader(type, len) {
  * @param headerSize
  */
 function encodeHeader(type, partBuffer, headerSize) {
-    var header = buildHeader(type, headerSize);
-    protocol.bigParser.writeData(protocol.headerDefinition, partBuffer, 0, header);
-}
-
-/**
- *
- * @param string
- * @returns {*[]}
- */
-function buildStringTypeBuffer(string) {
-    var hostBuffer = new Buffer(string.length + protocol.NULL_BYTE_SIZE);
-    hostBuffer.write(string + '\0');
-    return [hostBuffer];
+    ctype.wuint16(type, 'big', partBuffer, 0);
+    ctype.wuint16(protocol.HEADER_SIZE + headerSize, 'big', partBuffer, protocol.LENGTH_SIZE);
 }
 
 /**
  *
  * @param partBuffer
  * @param string
- * @param stringSize
  */
-function encodeStringPart(partBuffer, string, stringSize) {
-    var value = buildStringTypeBuffer(string);
-    var definition = protocol.buildStringTypeDefinition(stringSize);
-    protocol.bigParser.writeData(definition, partBuffer, protocol.HEADER_SIZE, value);
+function encodeStringPart(partBuffer, string) {
+    var offset = protocol.HEADER_SIZE;
+    for (var i = 0; i < string.length; i++) {
+        ctype.wuint8(string.charCodeAt(i), 'big', partBuffer, offset + i);
+    }
 }
 
 /**
@@ -58,7 +38,7 @@ function encodeString(type, string) {
     var partBuffer = new Buffer(protocol.HEADER_SIZE + stringSize);
 
     encodeHeader(type, partBuffer, stringSize);
-    encodeStringPart(partBuffer, string, stringSize);
+    encodeStringPart(partBuffer, string);
 
     return partBuffer;
 }
@@ -78,15 +58,15 @@ function addSign(value) {
  * @returns {*[]}
  */
 function int64ToHexArray(value) {
-    var hexValue = Math.abs(value).toString(16);
-    if (hexValue.length < 16) {
-        var zeros = new Array(16 - hexValue.length);
+    var hexValue = Math.abs(value).toString(protocol.MAX_BYTES);
+    if (hexValue.length < protocol.MAX_BYTES) {
+        var zeros = new Array(protocol.MAX_BYTES - hexValue.length);
         zeros.fill(0);
         hexValue = zeros.join('').concat(hexValue);
     }
 
-    var lhs = parseInt(hexValue.substring(0, 8), 16);
-    var rhs = parseInt(hexValue.substring(8, 16), 16);
+    var lhs = parseInt(hexValue.substring(0, protocol.HALF_BYTES), protocol.MAX_BYTES);
+    var rhs = parseInt(hexValue.substring(protocol.HALF_BYTES, protocol.MAX_BYTES), protocol.MAX_BYTES);
 
     if (value < 0) {
         return [addSign(lhs), addSign(rhs)];
@@ -101,8 +81,7 @@ function int64ToHexArray(value) {
  * @param value
  */
 function encodeNumericPart(partBuffer, value) {
-    protocol.bigParser.writeData(
-        protocol.numericDefinition, partBuffer, protocol.HEADER_SIZE, [int64ToHexArray(value)]);
+    ctype.wsint64(int64ToHexArray(value * 100000000), 'big', partBuffer, protocol.HEADER_SIZE);
 }
 
 /**
@@ -112,7 +91,7 @@ function encodeNumericPart(partBuffer, value) {
  * @returns {Buffer}
  */
 function encodeNumeric(type, value) {
-    var partBuffer = new Buffer(protocol.HEADER_SIZE + protocol.NUM_PART_SIZE);
+    var partBuffer = new Buffer(protocol.HEADER_AND_NUM_PART_SIZE);
 
     encodeHeader(type, partBuffer, protocol.NUM_PART_SIZE);
     encodeNumericPart(partBuffer, value);
@@ -127,10 +106,10 @@ function encodeNumeric(type, value) {
  */
 function getCounterDefinition(value) {
     return {
-        type: [protocol.DS_TYPE_COUNTER],
-        definition: protocol.counterDefinition,
+        type: protocol.DS_TYPE_COUNTER,
+        definition: 'uint64',
         endian: 'big',
-        value: [int64ToHexArray(value)]
+        value: int64ToHexArray(value)
     };
 }
 
@@ -141,10 +120,10 @@ function getCounterDefinition(value) {
  */
 function getGaugeDefinition(value) {
     return {
-        type: [protocol.DS_TYPE_GAUGE],
-        definition: protocol.gaugeDefinition,
+        type: protocol.DS_TYPE_GAUGE,
+        definition: 'double',
         endian: 'little',
-        value: [value]
+        value: value
     };
 }
 
@@ -155,10 +134,10 @@ function getGaugeDefinition(value) {
  */
 function getDeriveDefinition(value) {
     return {
-        type: [protocol.DS_TYPE_DERIVE],
-        definition: protocol.deriveDefinition,
+        type: protocol.DS_TYPE_DERIVE,
+        definition: 'sint64',
         endian: 'big',
-        value: [int64ToHexArray(value)]
+        value: int64ToHexArray(value)
     };
 }
 
@@ -169,10 +148,10 @@ function getDeriveDefinition(value) {
  */
 function getAbsoluteDefinition(value) {
     return {
-        type: [protocol.DS_TYPE_ABSOLUTE],
-        definition: protocol.absoluteDefinition,
+        type: protocol.DS_TYPE_ABSOLUTE,
+        definition: 'uint64',
         endian: 'big',
-        value: [int64ToHexArray(value)]
+        value: int64ToHexArray(value)
     };
 }
 
@@ -209,7 +188,7 @@ function getTypeDefinition(dstype, value) {
  * @param valuesSize
  */
 function encodeValuesSize(partBuffer, valuesSize) {
-    protocol.bigParser.writeData(protocol.valuesSizeDefinition, partBuffer, protocol.HEADER_SIZE, [valuesSize]);
+    ctype.wuint16(valuesSize, 'big', partBuffer, protocol.HEADER_SIZE);
 }
 
 /**
@@ -219,7 +198,7 @@ function encodeValuesSize(partBuffer, valuesSize) {
  * @param type
  */
 function encodeType(partBuffer, offset, type) {
-    protocol.bigParser.writeData(protocol.valueTypeDefinition, partBuffer, offset, type);
+    ctype.wuint8(parseInt(type), 'big', partBuffer, offset);
 }
 
 /**
@@ -231,11 +210,9 @@ function encodeType(partBuffer, offset, type) {
  */
 function encodeValue(typeDef, partBuffer, offset, value) {
     var definition = typeDef.definition;
-    if (typeDef.endian === 'little') {
-        protocol.littleParser.writeData(definition, partBuffer, offset, value);
-    } else {
-        protocol.bigParser.writeData(definition, partBuffer, offset, value);
-    }
+    var endieness = typeDef.endian;
+
+    ctype['w' + definition](value, endieness, partBuffer, offset);
 }
 
 /**
@@ -245,15 +222,15 @@ function encodeValue(typeDef, partBuffer, offset, value) {
  * @returns {Buffer}
  */
 function encodeValuesPart(dstypes, values) {
-    var payloadSize = values.length * (protocol.VALUE_NUMBER_SIZE + protocol.VALUE_SIZE);
-    var partBuffer = new Buffer(protocol.HEADER_SIZE + protocol.LENGTH_SIZE + payloadSize);
+    var payloadSize = values.length * protocol.VALUE_NUMBER_AND_VALUE_SIZE;
+    var partBuffer = new Buffer(protocol.HEADER_AND_LENGTH_SIZE + payloadSize);
 
     encodeHeader(protocol.TYPE_VALUES, partBuffer, protocol.LENGTH_SIZE + payloadSize);
     encodeValuesSize(partBuffer, values.length);
 
     var numberOfValues = dstypes.length;
 
-    var typeOffset = protocol.HEADER_SIZE + protocol.LENGTH_SIZE;
+    var typeOffset = protocol.HEADER_AND_LENGTH_SIZE;
     var valueOffset = typeOffset + numberOfValues;
 
     for (var i = 0; i < numberOfValues; i++) {
@@ -309,12 +286,12 @@ function isValue(partType) {
  * @returns {boolean}
  */
 function isAttributeValid(partType) {
-    return partType !== 'dstypes' && partType !== 'dsnames'
+    return partType !== 'dstypes' && partType !== 'dsnames';
 }
 
 /**
  *
- * @param metric
+ * @param metrics
  * @returns {Buffer}
  */
 exports.encode = function (metrics) {
@@ -328,8 +305,6 @@ exports.encode = function (metrics) {
 
                 var type = protocol.getTypeCodeFromName(partType);
                 var encoder = getPartEncoder(partType);
-                console.log(partType);
-                console.log(encoder);
 
                 var resultBuffer;
                 if (isValue(partType)) {
