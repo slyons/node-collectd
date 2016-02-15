@@ -80,12 +80,13 @@ module.exports = function(grunt) {
         }
     });
 
-    grunt.registerTask('test', ['jshint', 'mochacli', 'coveralls']);
+    grunt.registerTask('test', ['jshint', 'mochacli']);
     grunt.registerTask('coveralls', ['mocha_istanbul:coveralls']);
     grunt.registerTask('travis', ['clean:pre']);
     grunt.registerTask('default', [
         'clean:pre',
-        'test',
-        'coveralls'
+        'test'
+        // TODO - enable after ctype fix for small integer numbers
+        //'coveralls'
     ]);
 };
