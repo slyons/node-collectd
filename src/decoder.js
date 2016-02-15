@@ -2,15 +2,15 @@
 
 var clone = require('lodash/clone');
 var ctype = require('ctype');
-var protocol = require('./definition');
-
-var HIGH_RESOLUTION_DIVIDER = 1000000000;
+var definition = require('./definition');
+var converters = require('./converters');
 
 /**
+ * Decodes the part header.
  *
- * @param buffer
- * @param offset
- * @returns {*}
+ * @param buffer The buffer to use for decoding
+ * @param offset The offset to start reading
+ * @returns {{type: number, length: number}} A decoded header
  */
 function decodeHeader(buffer, offset) {
     var type = ctype.ruint16(buffer, 'big', offset);
@@ -20,14 +20,15 @@ function decodeHeader(buffer, offset) {
 }
 
 /**
+ * Decodes a part with string format
  *
- * @param buffer
- * @param offset
- * @param partLen
- * @returns {string}
+ * @param buffer The buffer to use for decoding
+ * @param offset The offset to start reading
+ * @param partLen The size of the part
+ * @returns {string} The decoded string
  */
 function decodeStringPart(buffer, offset, partLen) {
-    var stringOffset = protocol.HEADER_SIZE + offset;
+    var stringOffset = definition.HEADER_SIZE + offset;
 
     var decoded = '';
     for (var i = 0; i < (partLen - 5); i++) {
@@ -39,86 +40,80 @@ function decodeStringPart(buffer, offset, partLen) {
 }
 
 /**
+ * Decodes a part with numeric format.
  *
- * @param val
- * @returns {*}
- */
-function to64(val) {
-    // Until I get around to writing a native extension, this will have to do
-    try {
-        return ctype.toAbs64(val);
-    } catch (e) {
-        return ctype.toApprox64(val);
-    }
-}
-
-/**
- *
- * @param buffer
- * @param offset
- * @returns {*}
+ * @param buffer The buffer to use for decoding
+ * @param offset The offset to start reading
+ * @returns {number} The decoded number
  */
 function decodeNumericPart(buffer, offset) {
-    return to64(ctype.rsint64(buffer, 'big', protocol.HEADER_SIZE + offset));
+    return converters.to64(ctype.rsint64(buffer, 'big', definition.HEADER_SIZE + offset));
 }
 
 /**
+ * Decodes a part encoded in a high resolution number format.
  *
- * @param buffer
- * @param offset
- * @returns {number}
+ * @param buffer The buffer to use for decoding
+ * @param offset The offset to start reading
+ * @returns {number} The decoded number
  */
 function decodeHighResolutionPart(buffer, offset) {
-    return decodeNumericPart(buffer, offset) / HIGH_RESOLUTION_DIVIDER;
+    var highResolution =  decodeNumericPart(buffer, offset);
+    return converters.toLowResolution(highResolution);
 }
 
 /**
+ * Decodes the number of values contained in a metric, encoded after the header.
  *
- * @param buffer
- * @param offset
- * @returns {*}
+ * @param buffer The buffer to use for decoding
+ * @param offset The offset to start reading
+ * @returns {number} The number of values in a values part
  */
 function decodeValuesSize(buffer, offset) {
-    return ctype.ruint16(buffer, 'big', offset + protocol.HEADER_SIZE);
+    return ctype.ruint16(buffer, 'big', offset + definition.HEADER_SIZE);
 }
 
 /**
+ * Decodes the value type ('host', 'time', etc.).
  *
- * @param buffer
- * @param offset
- * @returns {*}
+ * @param buffer The buffer to use for decoding
+ * @param offset The offset to start reading
+ * @returns {number} The type code
  */
 function decodeValueType(buffer, offset) {
     return ctype.ruint8(buffer, 'big', offset);
 }
 
 /**
+ * Decodes a counter value.
  *
- * @param buffer
- * @param offset
- * @returns {{value: *, type: string}}
+ * @param buffer The buffer to use for decoding
+ * @param offset The offset to start reading
+ * @returns {{value: number, type: string}} The decoded counter
  */
 function decodeCounter(buffer, offset) {
     var counter = ctype.ruint64(buffer, 'big', offset);
-    return {value: to64(counter), type: 'counter'};
+    return {value: converters.to64(counter), type: 'counter'};
 }
 
 /**
+ * Decodes a derive value.
  *
- * @param buffer
- * @param offset
- * @returns {{value: *, type: string}}
+ * @param buffer The buffer to use for decoding
+ * @param offset The offset to start reading
+ * @returns {{value: number, type: string}} The decoded derive
  */
 function decodeDerive(buffer, offset) {
     var derive = ctype.rsint64(buffer, 'big', offset);
-    return {value: to64(derive), type: 'derive'};
+    return {value: converters.to64(derive), type: 'derive'};
 }
 
 /**
+ * Decodes a gauge value.
  *
- * @param buffer
- * @param offset
- * @returns {{value: *, type: string}}
+ * @param buffer The buffer to use for decoding
+ * @param offset The offset to start reading
+ * @returns {{value: number, type: string}} The gauge counter
  */
 function decodeGauge(buffer, offset) {
     var gauge = ctype.rdouble(buffer, 'little', offset);
@@ -126,37 +121,40 @@ function decodeGauge(buffer, offset) {
 }
 
 /**
+ * Decodes an absolute value.
  *
- * @param buffer
- * @param offset
- * @returns {{value: *, type: string}}
+ * @param buffer The buffer to use for decoding
+ * @param offset The offset to start reading
+ * @returns {{value: number, type: string}} The decoded absolute
  */
 function decodeAbsolute(buffer, offset) {
     var absolute = ctype.ruint64(buffer, 'big', offset);
-    return {value: to64(absolute), type: 'absolute'};
+    return {value: converters.to64(absolute), type: 'absolute'};
 }
 
 /**
+ * Returns the decoder for the passed value type.
  *
- * @param valueType
- * @returns {*}
+ * @param valueType The value type
+ * @returns {*} A value decoder (counter, derive, gauge or absolute)
  */
 function getValueDecoder(valueType) {
     var decoder = [];
 
-    decoder[protocol.DS_TYPE_COUNTER] = decodeCounter;
-    decoder[protocol.DS_TYPE_DERIVE] = decodeDerive;
-    decoder[protocol.DS_TYPE_GAUGE] = decodeGauge;
-    decoder[protocol.DS_TYPE_ABSOLUTE] = decodeAbsolute;
+    decoder[definition.DS_TYPE_COUNTER] = decodeCounter;
+    decoder[definition.DS_TYPE_DERIVE] = decodeDerive;
+    decoder[definition.DS_TYPE_GAUGE] = decodeGauge;
+    decoder[definition.DS_TYPE_ABSOLUTE] = decodeAbsolute;
 
     return decoder[valueType];
 }
 
 /**
+ * Decodes the values part.
  *
- * @param buffer
- * @param offset
- * @returns {{dstypes: Array, values: Array}}
+ * @param buffer The buffer to use for decoding
+ * @param offset The offset to start reading
+ * @returns {{dstypes: Array, values: Array}} A decoded part
  */
 function decodeValuesPart(buffer, offset) {
     var values = {dstypes: [], values: [], dsnames: []};
@@ -164,8 +162,8 @@ function decodeValuesPart(buffer, offset) {
     // Decode values size
     var numberOfValues = decodeValuesSize(buffer, offset);
 
-    var typeOffset = offset + protocol.HEADER_AND_LENGTH_SIZE;
-    var valuesOffset = offset + protocol.HEADER_AND_LENGTH_SIZE + numberOfValues;
+    var typeOffset = offset + definition.HEADER_AND_LENGTH_SIZE;
+    var valuesOffset = offset + definition.HEADER_AND_LENGTH_SIZE + numberOfValues;
 
     // Decode types
     for (var i = 0; i < numberOfValues; i++) {
@@ -178,7 +176,7 @@ function decodeValuesPart(buffer, offset) {
         values.dsnames.push('value');
 
         typeOffset++;
-        valuesOffset += protocol.VALUE_SIZE;
+        valuesOffset += definition.VALUE_SIZE;
     }
 
     return values;
@@ -194,55 +192,90 @@ function addValuesToMetric(metric, values) {
     metric.dsnames = values.dsnames;
 }
 
+/**
+ * Returns a parts decoder based on the passed part type.
+ *
+ * @param partType The part type code
+ * @returns {*} A parts decoder
+ */
 function getPartDecoder(partType) {
     var decoders = [];
 
-    decoders[protocol.TYPE_HOST] = decodeStringPart;
-    decoders[protocol.TYPE_PLUGIN] = decodeStringPart;
-    decoders[protocol.TYPE_PLUGIN_INSTANCE] = decodeStringPart;
-    decoders[protocol.TYPE_TYPE] = decodeStringPart;
-    decoders[protocol.TYPE_TYPE_INSTANCE] = decodeStringPart;
-    decoders[protocol.TYPE_MESSAGE] = decodeStringPart;
-    decoders[protocol.TYPE_TIME] = decodeNumericPart;
-    decoders[protocol.TYPE_TIME_HIRES] = decodeHighResolutionPart;
-    decoders[protocol.TYPE_INTERVAL] = decodeNumericPart;
-    decoders[protocol.TYPE_INTERVAL_HIRES] = decodeHighResolutionPart;
-    decoders[protocol.TYPE_SEVERITY] = decodeNumericPart;
-    decoders[protocol.TYPE_VALUES] = decodeValuesPart;
+    decoders[definition.TYPE_HOST] = decodeStringPart;
+    decoders[definition.TYPE_PLUGIN] = decodeStringPart;
+    decoders[definition.TYPE_PLUGIN_INSTANCE] = decodeStringPart;
+    decoders[definition.TYPE_TYPE] = decodeStringPart;
+    decoders[definition.TYPE_TYPE_INSTANCE] = decodeStringPart;
+    decoders[definition.TYPE_MESSAGE] = decodeStringPart;
+    decoders[definition.TYPE_TIME] = decodeNumericPart;
+    decoders[definition.TYPE_TIME_HIRES] = decodeHighResolutionPart;
+    decoders[definition.TYPE_INTERVAL] = decodeNumericPart;
+    decoders[definition.TYPE_INTERVAL_HIRES] = decodeHighResolutionPart;
+    decoders[definition.TYPE_SEVERITY] = decodeNumericPart;
+    decoders[definition.TYPE_VALUES] = decodeValuesPart;
 
     return decoders[partType];
 }
 
 /**
+ * Decodes a specific part and eventually adds the decoded part to the metrics array.
  *
- * @param buffer
- * @returns {Array}
+ * @param metrics An array of metrics (to construct)
+ * @param metric The metric being constructed
+ * @param header The decoded header to help decode the part body
+ * @param buffer The buffer to use for decoding
+ * @param offset The offset to start reading
  */
-exports.decode = function (buffer) {
+function decodePart(metrics, metric, header, buffer, offset) {
+    var decoder = getPartDecoder(header.type);
 
-    var metrics = [];
-
-    var offset = 0;
-    var bufferLength = buffer.length;
-
-    var metric = {};
-    while (offset < bufferLength) {
-        // Decode the header
-        var header = decodeHeader(buffer, offset);
-
-        var decoder = getPartDecoder(header.type);
-        var decoded = decoder(buffer, offset, header.length);
-
-        if (header.type === protocol.TYPE_VALUES) {
-            addValuesToMetric(metric, decoded);
-            metrics.push(clone(metric));
-        } else {
-            var typeName = protocol.getTypeNameFromCode(header.type);
-            addToMetric(metric, typeName, decoded);
-        }
-
-        offset += header.length;
+    if (decoder === undefined) {
+        throw (new Error('No handler for type ' + header.type));
     }
 
-    return metrics;
+    var decoded = decoder(buffer, offset, header.length);
+    if (header.type === definition.TYPE_VALUES) {
+        addValuesToMetric(metric, decoded);
+        metrics.push(clone(metric));
+    } else {
+        var typeName = converters.getTypeNameFromCode(header.type);
+
+        if (typeName === undefined) {
+            throw (new Error('No type name found for: ' + header.type));
+        }
+
+        addToMetric(metric, typeName, decoded);
+    }
+}
+
+/**
+ * Decodes a buffer of collectd metrics encoded in the binary protocol. Please reference to:
+ * {@link https://collectd.org/wiki/index.php/Binary_protocol}
+ *
+ * @param buffer The buffer to use for decoding
+ * @returns {Array} An array of decoded collectd metrics.
+ */
+exports.decode = function (buffer) {
+    try {
+        var metrics = [];
+
+        var offset = 0;
+        var bufferLength = buffer.length;
+
+        var metric = {};
+        while (offset < bufferLength) {
+            var header = decodeHeader(buffer, offset);
+            decodePart(metrics, metric, header, buffer, offset);
+
+            if (header.length === 0) {
+                console.error("Unable to decode. Invalid message?");
+                break;
+            }
+
+            offset += header.length;
+        }
+        return metrics;
+    } catch (err) {
+        console.error(err);
+    }
 };

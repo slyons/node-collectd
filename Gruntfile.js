@@ -51,9 +51,9 @@ module.exports = function(grunt) {
                 src: ['test'],
                 options: {
                     check: {
-                        lines: 80,
-                        statements: 80,
-                        branches: 55
+                        lines: 99,
+                        statements: 99,
+                        branches: 93
                     },
                     root: './src',
                     reportFormats: ['lcov']

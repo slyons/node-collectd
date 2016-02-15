@@ -15,7 +15,7 @@ collectd-protocol
   Add unit tests for any new or changed functionality. Lint and test your code.
   
 ## TODO
-  * Get better mocked binary streams to increase code coverage
+  * Improve handling of large numbers encoding which Javascript can't handle with precision (numbers greater than Number.MAX_SAFE_INTEGER). It's ok for now since we convert high precision numbers to low precision every time, which makes the least significant bits irrelevant.
 
 ## Release History
 

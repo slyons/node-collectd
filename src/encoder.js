@@ -1,41 +1,45 @@
 'use strict';
 
-var protocol = require('./definition');
 var ctype = require('ctype');
+var definition = require('./definition');
+var converters = require('./converters');
 
 /**
+ * Encodes a part header.
  *
- * @param type
- * @param partBuffer
- * @param headerSize
+ * @param type  The type of part to encode
+ * @param partBuffer The buffer of the part being encoded
+ * @param headerSize The size to encode in the header
  */
 function encodeHeader(type, partBuffer, headerSize) {
     ctype.wuint16(type, 'big', partBuffer, 0);
-    ctype.wuint16(protocol.HEADER_SIZE + headerSize, 'big', partBuffer, protocol.LENGTH_SIZE);
+    ctype.wuint16(definition.HEADER_SIZE + headerSize, 'big', partBuffer, definition.LENGTH_SIZE);
 }
 
 /**
+ * Encoded a string part.
  *
- * @param partBuffer
- * @param string
+ * @param partBuffer The buffer of the part being encoded
+ * @param string The string value to encode
  */
 function encodeStringPart(partBuffer, string) {
-    var offset = protocol.HEADER_SIZE;
+    var offset = definition.HEADER_SIZE;
     for (var i = 0; i < string.length; i++) {
         ctype.wuint8(string.charCodeAt(i), 'big', partBuffer, offset + i);
     }
 }
 
 /**
+ * Encodes a string with its header.
  *
- * @param type
- * @param string
- * @returns {Buffer}
+ * @param type The type of part to encode
+ * @param string The string value to encode
+ * @returns {Buffer} The constructed buffer with the encoded string
  */
 function encodeString(type, string) {
-    var stringSize = string.length + protocol.NULL_BYTE_SIZE;
+    var stringSize = string.length + definition.NULL_BYTE_SIZE;
 
-    var partBuffer = new Buffer(protocol.HEADER_SIZE + stringSize);
+    var partBuffer = new Buffer(definition.HEADER_SIZE + stringSize);
 
     encodeHeader(type, partBuffer, stringSize);
     encodeStringPart(partBuffer, string);
@@ -44,83 +48,71 @@ function encodeString(type, string) {
 }
 
 /**
+ * Encodes a numeric part.
  *
- * @param value
- * @returns {number}
- */
-function addSign(value) {
-    return 0 - value;
-}
-
-/**
- *
- * @param value
- * @returns {*[]}
- */
-function int64ToHexArray(value) {
-    var hexValue = Math.abs(value).toString(protocol.MAX_BYTES);
-    if (hexValue.length < protocol.MAX_BYTES) {
-        var zeros = new Array(protocol.MAX_BYTES - hexValue.length);
-        zeros.fill(0);
-        hexValue = zeros.join('').concat(hexValue);
-    }
-
-    var lhs = parseInt(hexValue.substring(0, protocol.HALF_BYTES), protocol.MAX_BYTES);
-    var rhs = parseInt(hexValue.substring(protocol.HALF_BYTES, protocol.MAX_BYTES), protocol.MAX_BYTES);
-
-    if (value < 0) {
-        return [addSign(lhs), addSign(rhs)];
-    } else {
-        return [lhs, rhs];
-    }
-}
-
-/**
- *
- * @param partBuffer
- * @param value
+ * @param partBuffer The buffer of the part being encoded
+ * @param value The numeric value to encode
  */
 function encodeNumericPart(partBuffer, value) {
-    ctype.wsint64(int64ToHexArray(value * 100000000), 'big', partBuffer, protocol.HEADER_SIZE);
+    ctype.wsint64(converters.approximateInt64ToHexArray(value), 'big', partBuffer, definition.HEADER_SIZE);
 }
 
 /**
+ * Encodes a number with its header.
  *
- * @param type
- * @param value
- * @returns {Buffer}
+ * @param type The type of part to encode
+ * @param value The numeric value to encode
+ * @returns {Buffer} The constructed buffer with the encoded number
  */
 function encodeNumeric(type, value) {
-    var partBuffer = new Buffer(protocol.HEADER_AND_NUM_PART_SIZE);
+    var partBuffer = new Buffer(definition.HEADER_AND_NUM_PART_SIZE);
 
-    encodeHeader(type, partBuffer, protocol.NUM_PART_SIZE);
+    encodeHeader(type, partBuffer, definition.NUM_PART_SIZE);
     encodeNumericPart(partBuffer, value);
 
     return partBuffer;
 }
 
 /**
+ * Encodes a number with its header in high resolution format.
  *
- * @param value
- * @returns {{type: *[], definition: (exports.counterDefinition|*), endian: string, value: *[]}}
+ * @param type The type of part to encode
+ * @param value The numeric value to encode
+ * @returns {Buffer} The constructed buffer with the encoded number
+ */
+function encodeHighResolutionPart(type, value) {
+    var partBuffer = new Buffer(definition.HEADER_AND_NUM_PART_SIZE);
+
+    encodeHeader(type, partBuffer, definition.NUM_PART_SIZE);
+    encodeNumericPart(partBuffer, value);
+
+    return partBuffer;
+}
+
+/**
+ * Returns the definition of a counter, containing the value (in hex array format).
+ *
+ * @param value The value to place on the counter definition
+ * @returns {*} The counter definition
  */
 function getCounterDefinition(value) {
     return {
-        type: protocol.DS_TYPE_COUNTER,
+        type: definition.DS_TYPE_COUNTER,
         definition: 'uint64',
         endian: 'big',
-        value: int64ToHexArray(value)
+        value: converters.approximateInt64ToHexArray(value)
     };
 }
 
 /**
+ * Returns the definition of a gauge, containing the value (in hex array format).
  *
- * @param value
- * @returns {{type: *[], definition: (exports.gaugeDefinition|*), endian: string, value: *[]}}
+ * @param value The value to place on the gauge definition
+ * @returns {*} The gauge definition
  */
 function getGaugeDefinition(value) {
     return {
-        type: protocol.DS_TYPE_GAUGE,
+        type: definition.DS_TYPE_GAUGE,
         definition: 'double',
         endian: 'little',
         value: value
@@ -128,39 +120,42 @@ function getGaugeDefinition(value) {
 }
 
 /**
+ * Returns the definition of a derive, containing the value (in hex array format).
  *
- * @param value
- * @returns {{type: *[], definition: (exports.deriveDefinition|*), endian: string, value: *[]}}
+ * @param value The value to place on the derive definition
+ * @returns {*} The derive definition
  */
 function getDeriveDefinition(value) {
     return {
-        type: protocol.DS_TYPE_DERIVE,
+        type: definition.DS_TYPE_DERIVE,
         definition: 'sint64',
         endian: 'big',
-        value: int64ToHexArray(value)
+        value: converters.approximateInt64ToHexArray(value)
     };
 }
 
 /**
+ * Returns the definition of a absolute, containing the value (in hex array format).
  *
- * @param value
- * @returns {{type: *[], definition: (exports.absoluteDefinition|*), endian: string, value: *[]}}
+ * @param value The value to place on the absolute definition
+ * @returns {*} The absolute definition
  */
 function getAbsoluteDefinition(value) {
     return {
-        type: protocol.DS_TYPE_ABSOLUTE,
+        type: definition.DS_TYPE_ABSOLUTE,
         definition: 'uint64',
         endian: 'big',
-        value: int64ToHexArray(value)
+        value: converters.approximateInt64ToHexArray(value)
     };
 }
 
 /**
+ * Returns a value definer based on the value type.
  *
- * @param dstype
- * @returns {*}
+ * @param dstype The type of the value
+ * @returns {*} A function to get a value definition
  */
-function getDefinition(dstype) {
+function getValueDefiner(dstype) {
     var definitions = [];
 
     definitions['counter'] = getCounterDefinition;
@@ -172,41 +167,45 @@ function getDefinition(dstype) {
 }
 
 /**
+ * Returns a value definition from the passed value type.
  *
- * @param dstype
- * @param value
- * @returns {*}
+ * @param dstype The value type to get the definition
+ * @param value The vale to append on the definition
+ * @returns {*} A value definition
  */
-function getTypeDefinition(dstype, value) {
-    var definition = getDefinition(dstype);
+function getValueDefinition(dstype, value) {
+    var definition = getValueDefiner(dstype);
     return definition(value);
 }
 
 /**
+ * Encodes a values size, to encode after the header.
  *
- * @param partBuffer
- * @param valuesSize
+ * @param partBuffer The buffer of the part being encoded
+ * @param valuesSize The size value to encode
  */
 function encodeValuesSize(partBuffer, valuesSize) {
-    ctype.wuint16(valuesSize, 'big', partBuffer, protocol.HEADER_SIZE);
+    ctype.wuint16(valuesSize, 'big', partBuffer, definition.HEADER_SIZE);
 }
 
 /**
+ * Encode the part type.
  *
- * @param partBuffer
- * @param offset
- * @param type
+ * @param partBuffer The buffer of the part being encoded
+ * @param offset The offset to start writing
+ * @param type The type to encode
  */
 function encodeType(partBuffer, offset, type) {
     ctype.wuint8(parseInt(type), 'big', partBuffer, offset);
 }
 
 /**
+ * Encode value.
  *
- * @param typeDef
- * @param partBuffer
- * @param offset
- * @param value
+ * @param typeDef The type definition to encode
+ * @param partBuffer The buffer of the part being encoded
+ * @param offset The offset to start writing
+ * @param value The value to encode
  */
 function encodeValue(typeDef, partBuffer, offset, value) {
     var definition = typeDef.definition;
@@ -216,25 +215,26 @@ function encodeValue(typeDef, partBuffer, offset, value) {
 }
 
 /**
+ * Encodes a values part.
  *
- * @param dstypes
- * @param values
- * @returns {Buffer}
+ * @param dstypes The type of value to encode
+ * @param values The values to encode
+ * @returns {Buffer} The constructed buffer with the encoded values
  */
 function encodeValuesPart(dstypes, values) {
-    var payloadSize = values.length * protocol.VALUE_NUMBER_AND_VALUE_SIZE;
-    var partBuffer = new Buffer(protocol.HEADER_AND_LENGTH_SIZE + payloadSize);
+    var payloadSize = values.length * definition.VALUE_NUMBER_AND_VALUE_SIZE;
+    var partBuffer = new Buffer(definition.HEADER_AND_LENGTH_SIZE + payloadSize);
 
-    encodeHeader(protocol.TYPE_VALUES, partBuffer, protocol.LENGTH_SIZE + payloadSize);
+    encodeHeader(definition.TYPE_VALUES, partBuffer, definition.LENGTH_SIZE + payloadSize);
     encodeValuesSize(partBuffer, values.length);
 
     var numberOfValues = dstypes.length;
 
-    var typeOffset = protocol.HEADER_AND_LENGTH_SIZE;
+    var typeOffset = definition.HEADER_AND_LENGTH_SIZE;
     var valueOffset = typeOffset + numberOfValues;
 
     for (var i = 0; i < numberOfValues; i++) {
-        var typeDef = getTypeDefinition(dstypes[i], values[i]);
+        var typeDef = getValueDefinition(dstypes[i], values[i]);
         encodeType(partBuffer, typeOffset, typeDef.type);
         encodeValue(typeDef, partBuffer, valueOffset, typeDef.value);
 
@@ -246,9 +246,10 @@ function encodeValuesPart(dstypes, values) {
 }
 
 /**
+ * Returns a part encoder from the specified part type.
  *
- * @param partType
- * @returns {*}
+ * @param partType The parts type
+ * @returns {*} The parts encoder
  */
 function getPartEncoder(partType) {
     var encoders = [];
@@ -260,9 +261,9 @@ function getPartEncoder(partType) {
     encoders['type_instance'] = encodeString;
     encoders['message'] = encodeString;
     encoders['time'] = encodeNumeric;
-    encoders['time_hires'] = encodeNumeric;
+    encoders['time_hires'] = encodeHighResolutionPart;
     encoders['interval'] = encodeNumeric;
-    encoders['interval_hires'] = encodeNumeric;
+    encoders['interval_hires'] = encodeHighResolutionPart;
     encoders['severity'] = encodeNumeric;
     encoders['dstypes'] = encodeValuesPart;
     encoders['values'] = encodeValuesPart;
@@ -271,52 +272,79 @@ function getPartEncoder(partType) {
     return encoders[partType];
 }
 
-/**
- *
- * @param partType
- * @returns {boolean}
- */
 function isValue(partType) {
     return partType === 'values';
 }
 
-/**
- *
- * @param partType
- * @returns {boolean}
- */
 function isAttributeValid(partType) {
     return partType !== 'dstypes' && partType !== 'dsnames';
 }
 
 /**
+ * Encodes a type from the specified metric.
  *
- * @param metrics
- * @returns {Buffer}
+ * @param partType The part type of the metric to encode
+ * @param metric  The metric containing parts to encode
+ * @returns {Buffer} The constructed buffer with the encoded part
  */
-exports.encode = function (metrics) {
+function encodeMetric(partType, metric) {
+    var type = converters.getTypeCodeFromName(partType);
+    var encoder = getPartEncoder(partType);
 
+    if (undefined === encoder || undefined === type) {
+        throw (new Error('Invalid part type found: ' + partType));
+    }
+
+    var resultBuffer;
+    if (isValue(partType)) {
+        resultBuffer = encoder(metric.dstypes, metric.values);
+    } else {
+        resultBuffer = encoder(type, metric[partType]);
+    }
+    return resultBuffer;
+}
+
+/**
+ * Encodes an array of metrics.
+ *
+ * @param metrics An array of metrics to encode
+ * @returns {Buffer} The constructed buffer with the encoded metrics
+ */
+function encodeMetrics(metrics) {
     // TODO - provide size for better performance when concat
     var buffer = new Buffer(0);
 
     metrics.forEach(function (metric) {
         for (var partType in metric) {
             if (metric.hasOwnProperty(partType) && isAttributeValid(partType)) {
-
-                var type = protocol.getTypeCodeFromName(partType);
-                var encoder = getPartEncoder(partType);
-
-                var resultBuffer;
-                if (isValue(partType)) {
-                    resultBuffer = encoder(metric.dstypes, metric.values);
-                } else {
-                    resultBuffer = encoder(type, metric[partType]);
-                }
-
+                var resultBuffer = encodeMetric(partType, metric);
                 buffer = Buffer.concat([buffer, resultBuffer]);
             }
         }
     });
+
+    return buffer;
+}
+
+/**
+ * Encodes an array of metrics to the collectd's binary protocol. Please reference to:
+ * {@link https://collectd.org/wiki/index.php/Binary_protocol}
+ *
+ * @param metrics The array of metrics to encode
+ * @returns {Buffer} The constructed buffer with the encoded metrics
+ */
+exports.encode = function (metrics) {
+    var buffer;
+
+    try {
+        if (metrics instanceof Array) {
+            buffer = encodeMetrics(metrics);
+        } else {
+            console.error('value must be an array');
+        }
+    } catch (err) {
+        console.error(err);
+    }
 
     return buffer;
 };

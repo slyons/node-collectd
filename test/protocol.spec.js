@@ -1,109 +1,178 @@
 'use strict';
 
-var path = require('path');
 var assert = require('chai').assert;
-var fs = require('fs');
 
-var victim = require('../src/decoder');
-var encoder = require('../src/encoder');;
+var decoder = require('../src/decoder');
+var encoder = require('../src/encoder');
 
 describe('When decoding collectd\'s binary protocol', function () {
 
-    var binaryData;
+    var defaultMock;
 
     /*jshint -W117 */
     before(function () {
-        var mockData = fs.readFileSync(path.resolve(__dirname, './collectd-mock-data.bin'));
-        var decoded = victim.decode(mockData);
-        binaryData = encoder.encode(decoded);
+        defaultMock = [{
+            host: 'localhost',
+            time: 1455098772,
+            interval: 10,
+            plugin: 'GenericJMX',
+            plugin_instance: 'MemoryPool|Eden_Space',
+            type: 'memory',
+            type_instance: 'committed',
+            dstypes: [ 'gauge' ],
+            values: [ 152567808.92 ],
+            dsnames: [ 'value' ]
+        }];
     });
 
     it('should decode plugin data', function () {
-        var result = victim.decode(binaryData);
+        var binaryData = encoder.encode(defaultMock);
+
+        var result = decoder.decode(binaryData);
 
         assert.equal('GenericJMX', result[0].plugin);
         assert.equal('MemoryPool|Eden_Space', result[0].plugin_instance);
     });
 
     it('should decode type data', function () {
-        var result = victim.decode(binaryData);
+        var binaryData = encoder.encode(defaultMock);
+
+        var result = decoder.decode(binaryData);
 
         assert.equal('memory', result[0].type);
         assert.equal('committed', result[0].type_instance);
     });
 
     it('should decode time data', function () {
-        var result = victim.decode(binaryData);
+        var binaryData = encoder.encode(defaultMock);
 
-        assert.equal(1562400410.1753733, result[0].time);
+        var result = decoder.decode(binaryData);
+
+        assert.equal(1455098772, result[0].time);
+    });
+
+    it('should decode high resolution time', function () {
+        var defaultMock = [{
+            host: 'localhost',
+            time_hires: 1562400409547440000,
+            interval: 10,
+            plugin: 'GenericJMX',
+            plugin_instance: 'MemoryPool|Eden_Space',
+            type: 'memory',
+            type_instance: 'committed',
+            dstypes: [ 'gauge' ],
+            values: [ 152567808.92 ],
+            dsnames: [ 'value' ]
+        }];
+
+        var binaryData = encoder.encode(defaultMock);
+
+        var result = decoder.decode(binaryData);
+
+        assert.equal(1455098772, result[0].time);
     });
 
     it('should decode interval data', function () {
-        var result = victim.decode(binaryData);
+        var binaryData = encoder.encode(defaultMock);
 
-        assert.equal(10.73741824, result[0].interval);
+        var result = decoder.decode(binaryData);
+
+        assert.equal(10, result[0].interval);
+    });
+
+    it('should decode high resolution interval data', function () {
+        var defaultMock = [{
+            host: 'localhost',
+            time: 1455098772,
+            interval_hires: 10737418240,
+            plugin: 'GenericJMX',
+            plugin_instance: 'MemoryPool|Eden_Space',
+            type: 'memory',
+            type_instance: 'committed',
+            dstypes: [ 'gauge' ],
+            values: [ 152567808.92 ],
+            dsnames: [ 'value' ]
+        }];
+
+        var binaryData = encoder.encode(defaultMock);
+
+        var result = decoder.decode(binaryData);
+
+        assert.equal(10, result[0].interval);
     });
 
     it('should decode host data', function () {
-        var result = victim.decode(binaryData);
+        var binaryData = encoder.encode(defaultMock);
+
+        var result = decoder.decode(binaryData);
 
         assert.equal('localhost', result[0].host);
     });
 
     it('should decode gauge values', function () {
-        var result = victim.decode(binaryData);
+        var binaryData = encoder.encode(defaultMock);
 
-        assert.sameMembers([152567808], result[0].values);
+        var result = decoder.decode(binaryData);
+
+        assert.sameMembers([152567808.92], result[0].values);
         assert.sameMembers(['gauge'], result[0].dstypes);
         assert.sameMembers(['value'], result[0].dsnames);
     });
 
     it('should decode derive metrics', function () {
-        var result = victim.decode(binaryData);
+        defaultMock[0].dstypes[0] = 'derive';
+        defaultMock[0].values[0] = 9591;
+        var binaryData = encoder.encode(defaultMock);
 
-        assert.sameMembers([9591], result[24].values);
-        assert.sameMembers(['derive'], result[24].dstypes);
-        assert.sameMembers(['value'], result[24].dsnames);
+        var result = decoder.decode(binaryData);
+
+        assert.sameMembers([9591], result[0].values);
+        assert.sameMembers(['derive'], result[0].dstypes);
+        assert.sameMembers(['value'], result[0].dsnames);
     });
 
-    xit ('should not convert invalid binary messages', function () {
-        var result = victim.decode('no binary');
+    it('should decode counter metrics', function () {
+        defaultMock[0].dstypes[0] = 'counter';
+        defaultMock[0].values[0] = 2000;
+        var binaryData = encoder.encode(defaultMock);
+
+        var result = decoder.decode(binaryData);
+
+        assert.sameMembers([2000], result[0].values);
+        assert.sameMembers(['counter'], result[0].dstypes);
+        assert.sameMembers(['value'], result[0].dsnames);
+    });
+
+    it('should decode counter metrics', function () {
+        defaultMock[0].dstypes[0] = 'absolute';
+        defaultMock[0].values[0] = 6098213;
+        var binaryData = encoder.encode(defaultMock);
+
+        var result = decoder.decode(binaryData);
+
+        assert.sameMembers([6098213], result[0].values);
+        assert.sameMembers(['absolute'], result[0].dstypes);
+        assert.sameMembers(['value'], result[0].dsnames);
+    });
+
+    it ('should not convert invalid binary messages', function () {
+        var result = decoder.decode('no binary');
         assert.equal(0, result.length);
     });
 
-    xit('', function () {
-        var binaryData = encoder.encode([{
-                host: 'localhost',
-                plugin: 'GenericJMX',
-                plugin_instance: 'GenericJMX|bla',
-                type: 'memory',
-                type_instance: 'memory|bla',
-                message: 'a message',
-                time: 1455219728000000000,
-                severity: 16,
+    it('should not encode non arrays', function() {
+        var result = encoder.encode(defaultMock[0]);
+        assert.equal(null, result);
+    });
 
-                dstypes: [
-                    'counter',
-                    'derive',
-                    'derive',
-                    'counter',
-                    'gauge'
-                ],
-                values: [
-                    1000000000000000000,
-                    1222000000000000000,
-                    1333000000000000000,
-                    1444000000000000000,
-                    1456000000000000.6
-                ]
-            }]);
+    it('should not throw when decoder', function () {
+        var defaultMock = [{
+            invalid: 'localhost'
+        }];
 
-        var result = victim.decode(binaryData);
-        console.log('old decoder');
-        console.log(result);
+        var binaryData = encoder.encode(defaultMock);
 
-        console.log('new decoder');
-        var result2 = victim.decode(binaryData);
-        console.log(result2);
+        var result = decoder.decode(binaryData);
+        assert.equal(null, result);
     });
 });

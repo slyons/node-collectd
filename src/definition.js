@@ -38,6 +38,9 @@ var HEADER_AND_NUM_PART_SIZE = HEADER_SIZE + NUM_PART_SIZE;
 var MAX_BYTES = 16;
 var HALF_BYTES = 8;
 
+var MAX_SUPPORTED_INT = 9223372034707292159;
+var MIN_SUPPORTED_INT = -MAX_SUPPORTED_INT;
+
 exports.TYPE_HOST = TYPE_HOST;
 exports.TYPE_TIME = TYPE_TIME;
 exports.TYPE_PLUGIN = TYPE_PLUGIN;
@@ -65,51 +68,5 @@ exports.VALUE_NUMBER_AND_VALUE_SIZE = VALUE_NUMBER_AND_VALUE_SIZE;
 exports.HEADER_AND_NUM_PART_SIZE = HEADER_AND_NUM_PART_SIZE;
 exports.MAX_BYTES = MAX_BYTES;
 exports.HALF_BYTES = HALF_BYTES;
-
-/**
- *
- * @param typeCode
- * @returns {*}
- */
-exports.getTypeCodeFromName = function (typeCode) {
-    var codes = [];
-
-    codes['host'] = TYPE_HOST;
-    codes['plugin'] = TYPE_PLUGIN;
-    codes['plugin_instance'] = TYPE_PLUGIN_INSTANCE;
-    codes['type'] = TYPE_TYPE;
-    codes['type_instance'] = TYPE_TYPE_INSTANCE;
-    codes['message'] = TYPE_MESSAGE;
-    codes['time'] = TYPE_TIME;
-    codes['time_hires'] = TYPE_TIME_HIRES;
-    codes['interval'] = TYPE_INTERVAL;
-    codes['interval_hires'] = TYPE_INTERVAL_HIRES;
-    codes['severity'] = TYPE_SEVERITY;
-    codes['values'] = TYPE_VALUES;
-
-    return codes[typeCode];
-};
-
-/**
- *
- * @param typeName
- * @returns {*}
- */
-exports.getTypeNameFromCode = function (typeName) {
-    var types = [];
-
-    types[TYPE_HOST] = 'host';
-    types[TYPE_PLUGIN] = 'plugin';
-    types[TYPE_PLUGIN_INSTANCE] = 'plugin_instance';
-    types[TYPE_TYPE] = 'type';
-    types[TYPE_TYPE_INSTANCE] = 'type_instance';
-    types[TYPE_MESSAGE] = 'message';
-    types[TYPE_TIME] = 'time';
-    types[TYPE_TIME_HIRES] = 'time';
-    types[TYPE_INTERVAL] = 'interval';
-    types[TYPE_INTERVAL_HIRES] = 'interval';
-    types[TYPE_SEVERITY] = 'severity';
-    types[TYPE_VALUES] = 'values';
-
-    return types[typeName];
-};
+exports.MAX_SUPPORTED_INT = MAX_SUPPORTED_INT;
+exports.MIN_SUPPORTED_INT = MIN_SUPPORTED_INT;
