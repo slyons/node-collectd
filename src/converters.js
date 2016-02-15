@@ -13,6 +13,11 @@ function addSign(value) {
     return 0 - value;
 }
 
+function arrayWithZeros(size) {
+    for (var i = 0, a = new Array(size); i < size;) { a[i++] = 0; }
+    return a;
+}
+
 /**
  * Returns an array with and approximate representation for the passed 64 bits integer. Values greater than
  * Number.MAX_SAFE_INTEGER and lesser than Number.MIN_SAFE_INTEGER will have their values as an approximate to the
@@ -33,8 +38,7 @@ function approximateInt64ToHexArray(value) {
 
     var hexValue = Math.abs(value).toString(16);
     if (hexValue.length < definition.MAX_BYTES) {
-        var zeros = new Array(definition.MAX_BYTES - hexValue.length);
-        zeros.fill(0);
+        var zeros = arrayWithZeros(definition.MAX_BYTES - hexValue.length);
         hexValue = zeros.join('').concat(hexValue);
     }
 
