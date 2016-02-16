@@ -1,2 +1,2 @@
-exports.decoder = require('../src/decoder');
-exports.encoder = require('../src/encoder');
+exports.decoder = require('./src/decoder');
+exports.encoder = require('./src/encoder');
