@@ -18,7 +18,7 @@
     "test": "grunt test"
   },
   "dependencies": {
-    "ctype": "^0.5.5",
+    "ctype": "git://github.com/brunopalos/node-ctype.git#wsint64-small-ints-fix",
     "lodash": "^4.3.0"
   },
   "devDependencies": {
