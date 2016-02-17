@@ -14,6 +14,10 @@ collectd-protocol
   In lieu of a formal styleguide, take care to maintain the existing coding style.
   Add unit tests for any new or changed functionality. Lint and test your code.
   
+## Running unit tests
+  
+  grunt test
+  
 ## TODO
   * Improve handling of large numbers encoding which Javascript can't handle with precision (numbers greater than Number.MAX_SAFE_INTEGER). It's ok for now since we convert high precision numbers to low precision every time, which makes the least significant bits irrelevant.
 
@@ -27,6 +31,7 @@ collectd-protocol
     - Added unit tests
     - Integration with Grunt
     - Integration with Travis
+    - Created an encoder
 
 [npm-url]: https://npmjs.org/package/collectd-protocol
 [npm-image]: https://badge.fury.io/js/collectd-protocol.svg
