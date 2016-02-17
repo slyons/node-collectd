@@ -3,7 +3,7 @@ collectd-protocol
 
 [![NPM version][npm-image]][npm-url] [![Build Status](https://travis-ci.org/Mindera/collectd-protocol.svg?branch=master)](https://travis-ci.org/Mindera/collectd-protocol)
 
-  This is a NodeJS module for decoding Collectd's binary protocol [collectd](http://collectd.org/). It supports decoding binary protocol from versions 4 and 5 of collectd.
+  This is a NodeJS module for decoding and encoding Collectd's binary protocol [collectd](http://collectd.org/). It supports decoding/encoding binary protocol from versions 4 and 5 of collectd.
 
 ## Installation
 
