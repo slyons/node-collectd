@@ -33,7 +33,7 @@ collectd-protocol
     - Integration with Travis
     - Created an encoder
     
-  * 0.0.1
+  * 0.0.2
     - Remove `node_modules` directory from npm_ignore
 
 [npm-url]: https://npmjs.org/package/collectd-protocol
