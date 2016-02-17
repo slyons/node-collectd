@@ -32,6 +32,9 @@ collectd-protocol
     - Integration with Grunt
     - Integration with Travis
     - Created an encoder
+    
+  * 0.0.1
+    - Remove `node_modules` directory from npm_ignore
 
 [npm-url]: https://npmjs.org/package/collectd-protocol
 [npm-image]: https://badge.fury.io/js/collectd-protocol.svg
