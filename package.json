@@ -19,7 +19,8 @@
   },
   "dependencies": {
     "ctype": "git://github.com/brunopalos/node-ctype.git#wsint64-small-ints-fix",
-    "lodash": "^4.3.0"
+    "lodash": "^4.3.0",
+    "q": "^1.4.1"
   },
   "devDependencies": {
     "blanket": "^1.2.1",
