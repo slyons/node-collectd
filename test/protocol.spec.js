@@ -253,4 +253,15 @@ describe('When decoding collectd\'s binary protocol', function () {
             done();
         });
     });
+
+    it('should not throw when input is an invalid buffer', function () {
+        var result = decoder.decode('|\\sw>!@,[]/%*.');
+
+        var decoded;
+        result.on('data', function(data) {
+            decoded = data;
+        }).on('error', function () {
+            done();
+        });
+    });
 });

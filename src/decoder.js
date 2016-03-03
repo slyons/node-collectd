@@ -350,6 +350,7 @@ function decodePart(metrics, metric, header, buffer, offset) {
 
         if (typeof decoder === 'undefined') {
             deferred.reject(new Error('No handler for type ' + header.type));
+            return;
         }
 
         decoder(buffer, offset, header.length)
@@ -361,6 +362,7 @@ function decodePart(metrics, metric, header, buffer, offset) {
                     var typeName = converters.getTypeNameFromCode(header.type);
                     if (typeof typeName === 'undefined') {
                         deferred.reject(new Error('No type name found for: ' + header.type));
+                        return;
                     }
                     addToMetric(metric, typeName, decoded);
                 }

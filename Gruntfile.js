@@ -85,8 +85,7 @@ module.exports = function(grunt) {
     grunt.registerTask('travis', ['clean:pre']);
     grunt.registerTask('default', [
         'clean:pre',
-        'test'
-        // TODO - enable after ctype fix for small integer numbers
-        //'coveralls'
+        'test',
+        'coveralls'
     ]);
 };
