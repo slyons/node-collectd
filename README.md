@@ -20,6 +20,7 @@ collectd-protocol
   
 ## TODO
   * Improve handling of large numbers encoding which Javascript can't handle with precision (numbers greater than Number.MAX_SAFE_INTEGER). It's ok for now since we convert high precision numbers to low precision every time, which makes the least significant bits irrelevant.
+  * Support async computations on message encoding
 
 ## Release History
 
@@ -35,6 +36,9 @@ collectd-protocol
     
   * 0.0.2
     - Remove `node_modules` directory from npm_ignore
+  
+  * 0.1.0
+    - Add async support for decoding messages
 
 [npm-url]: https://npmjs.org/package/collectd-protocol
 [npm-image]: https://badge.fury.io/js/collectd-protocol.svg

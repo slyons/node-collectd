@@ -25,33 +25,51 @@ describe('When decoding collectd\'s binary protocol', function () {
         }];
     });
 
-    it('should decode plugin data', function () {
+    it('should decode plugin data', function (done) {
         var binaryData = encoder.encode(defaultMock);
 
         var result = decoder.decode(binaryData);
 
-        assert.equal('GenericJMX', result[0].plugin);
-        assert.equal('MemoryPool|Eden_Space', result[0].plugin_instance);
+        var decoded;
+        result.on('data', function(data) {
+            decoded = data;
+        }).on('end', function () {
+            assert.equal('GenericJMX', decoded[0].plugin);
+            assert.equal('MemoryPool|Eden_Space', decoded[0].plugin_instance);
+            done();
+        });
     });
 
-    it('should decode type data', function () {
+    it('should decode type data', function (done) {
         var binaryData = encoder.encode(defaultMock);
 
         var result = decoder.decode(binaryData);
 
-        assert.equal('memory', result[0].type);
-        assert.equal('committed', result[0].type_instance);
+        var decoded;
+        result.on('data', function(data) {
+            decoded = data;
+        }).on('end', function () {
+            assert.equal('memory', decoded[0].type);
+            assert.equal('committed', decoded[0].type_instance);
+            done();
+        });
     });
 
-    it('should decode time data', function () {
+    it('should decode time data', function (done) {
         var binaryData = encoder.encode(defaultMock);
 
         var result = decoder.decode(binaryData);
 
-        assert.equal(1455098772, result[0].time);
+        var decoded;
+        result.on('data', function(data) {
+            decoded = data;
+        }).on('end', function () {
+            assert.equal(1455098772, decoded[0].time);
+            done();
+        });
     });
 
-    it('should decode high resolution time', function () {
+    it('should decode high resolution time', function (done) {
         var defaultMock = [{
             host: 'localhost',
             time_hires: 1562400409547440000,
@@ -69,18 +87,30 @@ describe('When decoding collectd\'s binary protocol', function () {
 
         var result = decoder.decode(binaryData);
 
-        assert.equal(1455098772, result[0].time);
+        var decoded;
+        result.on('data', function(data) {
+            decoded = data;
+        }).on('end', function () {
+            assert.equal(1455098772, decoded[0].time);
+            done();
+        });
     });
 
-    it('should decode interval data', function () {
+    it('should decode interval data', function (done) {
         var binaryData = encoder.encode(defaultMock);
 
         var result = decoder.decode(binaryData);
 
-        assert.equal(10, result[0].interval);
+        var decoded;
+        result.on('data', function(data) {
+            decoded = data;
+        }).on('end', function () {
+            assert.equal(10, decoded[0].interval);
+            done();
+        });
     });
 
-    it('should decode high resolution interval data', function () {
+    it('should decode high resolution interval data', function (done) {
         var defaultMock = [{
             host: 'localhost',
             time: 1455098772,
@@ -98,66 +128,108 @@ describe('When decoding collectd\'s binary protocol', function () {
 
         var result = decoder.decode(binaryData);
 
-        assert.equal(10, result[0].interval);
+        var decoded;
+        result.on('data', function(data) {
+            decoded = data;
+        }).on('end', function () {
+            assert.equal(10, decoded[0].interval);
+            done();
+        });
     });
 
-    it('should decode host data', function () {
+    it('should decode host data', function (done) {
         var binaryData = encoder.encode(defaultMock);
 
         var result = decoder.decode(binaryData);
 
-        assert.equal('localhost', result[0].host);
+        var decoded;
+        result.on('data', function(data) {
+            decoded = data;
+        }).on('end', function () {
+            assert.equal('localhost', decoded[0].host);
+            done();
+        });
     });
 
-    it('should decode gauge values', function () {
+    it('should decode gauge values', function (done) {
         var binaryData = encoder.encode(defaultMock);
 
         var result = decoder.decode(binaryData);
 
-        assert.sameMembers([152567808.92], result[0].values);
-        assert.sameMembers(['gauge'], result[0].dstypes);
-        assert.sameMembers(['value'], result[0].dsnames);
+        var decoded;
+        result.on('data', function(data) {
+            decoded = data;
+        }).on('end', function () {
+            assert.sameMembers([152567808.92], decoded[0].values);
+            assert.sameMembers(['gauge'], decoded[0].dstypes);
+            assert.sameMembers(['value'], decoded[0].dsnames);
+            done();
+        });
     });
 
-    it('should decode derive metrics', function () {
+    it('should decode derive metrics', function (done) {
         defaultMock[0].dstypes[0] = 'derive';
         defaultMock[0].values[0] = 9591;
         var binaryData = encoder.encode(defaultMock);
 
         var result = decoder.decode(binaryData);
 
-        assert.sameMembers([9591], result[0].values);
-        assert.sameMembers(['derive'], result[0].dstypes);
-        assert.sameMembers(['value'], result[0].dsnames);
+        var decoded;
+        result.on('data', function(data) {
+            decoded = data;
+        }).on('end', function () {
+            assert.sameMembers([9591], decoded[0].values);
+            assert.sameMembers(['derive'], decoded[0].dstypes);
+            assert.sameMembers(['value'], decoded[0].dsnames);
+            done();
+        });
     });
 
-    it('should decode counter metrics', function () {
+    it('should decode counter metrics', function (done) {
         defaultMock[0].dstypes[0] = 'counter';
         defaultMock[0].values[0] = 2000;
         var binaryData = encoder.encode(defaultMock);
 
         var result = decoder.decode(binaryData);
 
-        assert.sameMembers([2000], result[0].values);
-        assert.sameMembers(['counter'], result[0].dstypes);
-        assert.sameMembers(['value'], result[0].dsnames);
+        var decoded;
+        result.on('data', function(data) {
+            decoded = data;
+        }).on('end', function () {
+            assert.sameMembers([2000], decoded[0].values);
+            assert.sameMembers(['counter'], decoded[0].dstypes);
+            assert.sameMembers(['value'], decoded[0].dsnames);
+            done();
+        });
     });
 
-    it('should decode counter metrics', function () {
+    it('should decode counter metrics', function (done) {
         defaultMock[0].dstypes[0] = 'absolute';
         defaultMock[0].values[0] = 6098213;
         var binaryData = encoder.encode(defaultMock);
 
         var result = decoder.decode(binaryData);
 
-        assert.sameMembers([6098213], result[0].values);
-        assert.sameMembers(['absolute'], result[0].dstypes);
-        assert.sameMembers(['value'], result[0].dsnames);
+        var decoded;
+        result.on('data', function(data) {
+            decoded = data;
+        }).on('end', function () {
+            assert.sameMembers([6098213], decoded[0].values);
+            assert.sameMembers(['absolute'], decoded[0].dstypes);
+            assert.sameMembers(['value'], decoded[0].dsnames);
+            done();
+        });
     });
 
-    it ('should not convert invalid binary messages', function () {
+    it('should not convert invalid binary messages', function (done) {
         var result = decoder.decode('no binary');
-        assert.equal(0, result.length);
+
+        var decoded;
+        result.on('data', function(data) {
+            decoded = data;
+        }).on('error', function () {
+            done();
+        });
     });
 
     it('should not encode non arrays', function() {
@@ -165,7 +237,7 @@ describe('When decoding collectd\'s binary protocol', function () {
         assert.equal(null, result);
     });
 
-    it('should not throw when decoder', function () {
+    it('should not throw when input is undefined', function () {
         var defaultMock = [{
             invalid: 'localhost'
         }];
@@ -173,6 +245,12 @@ describe('When decoding collectd\'s binary protocol', function () {
         var binaryData = encoder.encode(defaultMock);
 
         var result = decoder.decode(binaryData);
-        assert.equal(null, result);
+
+        var decoded;
+        result.on('data', function(data) {
+            decoded = data;
+        }).on('error', function () {
+            done();
+        });
     });
 });
