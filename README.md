@@ -39,6 +39,10 @@ collectd-protocol
   
   * 0.1.0
     - Add async support for decoding messages
+    - Changed the decoding function to use Streams
+
+  * 0.1.1
+    - Fix invalid header check
 
 [npm-url]: https://npmjs.org/package/collectd-protocol
 [npm-image]: https://badge.fury.io/js/collectd-protocol.svg
