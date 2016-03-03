@@ -44,7 +44,8 @@ function decodeStringPart(buffer, offset, partLen) {
 
         var decoded = '';
         for (var i = 0; i < (partLen - 5); i++) {
-            decoded = decoded.concat(String.fromCharCode(ctype.rsint8(buffer, 'big', stringOffset)));
+            var decodedChar = String.fromCharCode(ctype.rsint8(buffer, 'big', stringOffset));
+            decoded = decoded.concat(decodedChar);
             stringOffset++;
         }
 
@@ -207,10 +208,45 @@ function getValueDecoder(valueType) {
     return decoder[valueType];
 }
 
-function pushDecodedValue(values, decoded) {
-    values.values.push(decoded.value);
-    values.dstypes.push(decoded.type);
-    values.dsnames.push('value');
+/**
+ * Returns a function that uses a decoder to decode the a buffer with the specified offset.
+ *
+ * @param buffer The buffer to decode
+ * @param valuesOffset The offset where to start decoding
+ * @returns {Function} A function to decode the buffer
+ */
+function useDecoderWith(buffer, valuesOffset) {
+    return function (decoder) {
+        return decoder(buffer, valuesOffset);
+    };
+}
+
+/**
+ * Returns a function to push a decoded value to the specified array of values.
+ *
+ * @param values An array of values to push the decoded value
+ * @returns {Function} A function to push the decoded value
+ */
+function pushDecodedValuesTo(values) {
+    return function (decoded) {
+        values.values.push(decoded.value);
+        values.dstypes.push(decoded.type);
+        values.dsnames.push('value');
+    };
+}
+
+/**
+ * Returns a function to update the value offsets.
+ *
+ * @param typeOffset The type offset to update
+ * @param valuesOffset The values offset to update
+ * @returns {Function} A function to update the offsets
+ */
+function updateValueOffsets(typeOffset, valuesOffset) {
+    return function() {
+        typeOffset++;
+        valuesOffset += definition.VALUE_SIZE;
+    };
 }
 
 /**
@@ -232,16 +268,7 @@ function decodeValuesPart(buffer, offset) {
                 var typeOffset = offset + definition.HEADER_AND_LENGTH_SIZE;
                 var valuesOffset = offset + definition.HEADER_AND_LENGTH_SIZE + numberOfValues;
 
-                function decode(decoder) {
-                    return decoder(buffer, valuesOffset);
-                }
-
-                function pushDecoded(decoded) {
-                    pushDecodedValue(values, decoded);
-
-                    typeOffset++;
-                    valuesOffset += definition.VALUE_SIZE;
-
+                function continueOrEnd() {
                     if (values.values.length === numberOfValues) {
                         deferred.resolve(values);
                     }
@@ -251,8 +278,10 @@ function decodeValuesPart(buffer, offset) {
                 for (var i = 0; i < numberOfValues; i++) {
                     decodeValueType(buffer, typeOffset)
                         .then(getValueDecoder)
-                        .then(decode)
-                        .then(pushDecoded);
+                        .then(useDecoderWith(buffer, valuesOffset))
+                        .then(pushDecodedValuesTo(values))
+                        .then(updateValueOffsets(typeOffset, valuesOffset))
+                        .then(continueOrEnd);
                 }
             });
     });
@@ -295,6 +324,16 @@ function getPartDecoder(partType) {
 }
 
 /**
+ * Returns true if the specified header belongs to a value type.
+ *
+ * @param header The header to check
+ * @returns {boolean} True if the header is from a value type, false otherwise
+ */
+function isValueType(header) {
+    return header.type === definition.TYPE_VALUES;
+}
+
+/**
  * Decodes a specific part and eventually adds the decoded part to the metrics array.
  *
  * @param metrics An array of metrics (to construct)
@@ -309,28 +348,36 @@ function decodePart(metrics, metric, header, buffer, offset) {
     setImmediate(function() {
         var decoder = getPartDecoder(header.type);
 
-        if (decoder === undefined) {
+        if (typeof decoder === 'undefined') {
             deferred.reject(new Error('No handler for type ' + header.type));
         }
 
         decoder(buffer, offset, header.length)
-            .then(function(wDecoded) {
-                if (header.type === definition.TYPE_VALUES) {
-                    addValuesToMetric(metric, wDecoded);
+            .then(function(decoded) {
+                if (isValueType(header)) {
+                    addValuesToMetric(metric, decoded);
                     metrics.push(clone(metric));
                 } else {
                     var typeName = converters.getTypeNameFromCode(header.type);
-
-                    if (typeName === undefined) {
+                    if (typeof typeName === 'undefined') {
                         deferred.reject(new Error('No type name found for: ' + header.type));
                     }
-
-                    addToMetric(metric, typeName, wDecoded);
+                    addToMetric(metric, typeName, decoded);
                 }
                 deferred.resolve({metric: metric, metrics: metrics});
             });
     });
     return deferred.promise;
+}
+
+/**
+ * Returns true if the specified header is empty.
+ *
+ * @param header Thea header to check
+ * @returns {boolean}
+ */
+function isHeaderEmpty(header) {
+    return header.length === 0;
 }
 
 function Decoder(buffer) {
@@ -360,8 +407,7 @@ Decoder.prototype._read = function() {
 
             decodeHeader(this._buffer, this._offset)
                 .then(function(header) {
-
-                    if (header.length === 0) {
+                    if (isHeaderEmpty(header)) {
                         self.emit('error', new Error('Unable to decode. Invalid message?'));
                         return;
                     }
