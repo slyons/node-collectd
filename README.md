@@ -43,6 +43,9 @@ collectd-protocol
 
   * 0.1.1
     - Fix invalid header check
+    
+  * 0.2.0
+    - Add support the data-set specifications (types.db)
 
 [npm-url]: https://npmjs.org/package/collectd-protocol
 [npm-image]: https://badge.fury.io/js/collectd-protocol.svg

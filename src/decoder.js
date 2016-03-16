@@ -5,9 +5,12 @@ var util = require('util');
 var Q = require('q');
 
 var clone = require('lodash/clone');
+var fill = require('lodash/fill');
+
 var ctype = require('ctype');
 var definition = require('./definition');
 var converters = require('./converters');
+var types = require('../metadata/typesdb.json');
 
 /**
  * Decodes the part header.
@@ -225,13 +228,14 @@ function useDecoderWith(buffer, valuesOffset) {
  * Returns a function to push a decoded value to the specified array of values.
  *
  * @param values An array of values to push the decoded value
+ * @param dsname The dsname of the type
  * @returns {Function} A function to push the decoded value
  */
-function pushDecodedValuesTo(values) {
+function pushDecodedValuesTo(values, dsname) {
     return function (decoded) {
         values.values.push(decoded.value);
         values.dstypes.push(decoded.type);
-        values.dsnames.push('value');
+        values.dsnames.push(dsname);
     };
 }
 
@@ -249,14 +253,48 @@ function updateValueOffsets(typeOffset, valuesOffset) {
     };
 }
 
+function toDsname(dataType) {
+    return dataType.dsname;
+}
+
+/**
+ * Return the dsname of the current metric for building a value part.
+ *
+ * @param metric The current metric being built
+ * @param numberOfValues Number of values
+ * @returns {string} The dsname, which 'value' is the default
+ */
+function getDsnamesFromMetric(metric, numberOfValues) {
+    var dsnames;
+
+    var typeName = converters.getTypeNameFromCode(definition.TYPE_TYPE);
+    var dataType = metric[typeName];
+
+    if (dataType !== undefined) {
+        var dataTypes = types[dataType];
+
+        if (dataTypes !== undefined) {
+            dsnames = dataTypes.map(toDsname);
+        }
+    }
+
+    if (typeof dsnames === 'undefined') {
+        dsnames = fill(new Array(numberOfValues), 'value');
+    }
+
+    return dsnames;
+}
+
 /**
  * Decodes the values part.
  *
  * @param buffer The buffer to use for decoding
  * @param offset The offset to start reading
+ * @param partLen The length og the values part
+ * @param metric the metric being constructed
  * @returns {{dstypes: Array, values: Array}} A decoded part
  */
-function decodeValuesPart(buffer, offset) {
+function decodeValuesPart(buffer, offset, partLen, metric) {
     var deferred = Q.defer();
 
     setImmediate(function () {
@@ -266,7 +304,7 @@ function decodeValuesPart(buffer, offset) {
         decodeValuesSize(buffer, offset)
             .then(function (numberOfValues) {
                 var typeOffset = offset + definition.HEADER_AND_LENGTH_SIZE;
-                var valuesOffset = offset + definition.HEADER_AND_LENGTH_SIZE + numberOfValues;
+                var valuesOffset = typeOffset + numberOfValues;
 
                 function continueOrEnd() {
                     if (values.values.length === numberOfValues) {
@@ -274,12 +312,14 @@ function decodeValuesPart(buffer, offset) {
                     }
                 }
 
+                var dsname = getDsnamesFromMetric(metric);
+
                 // Decode types
                 for (var i = 0; i < numberOfValues; i++) {
-                    decodeValueType(buffer, typeOffset)
+                    decodeValueType(buffer, typeOffset + i)
                         .then(getValueDecoder)
-                        .then(useDecoderWith(buffer, valuesOffset))
-                        .then(pushDecodedValuesTo(values))
+                        .then(useDecoderWith(buffer, valuesOffset + (i * definition.VALUE_SIZE)))
+                        .then(pushDecodedValuesTo(values, dsname[i]))
                         .then(updateValueOffsets(typeOffset, valuesOffset))
                         .then(continueOrEnd);
                 }
@@ -353,7 +393,7 @@ function decodePart(metrics, metric, header, buffer, offset) {
             return;
         }
 
-        decoder(buffer, offset, header.length)
+        decoder(buffer, offset, header.length, metric)
             .then(function(decoded) {
                 if (isValueType(header)) {
                     addValuesToMetric(metric, decoded);

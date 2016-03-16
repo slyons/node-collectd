@@ -8,6 +8,8 @@ var encoder = require('../src/encoder');
 describe('When decoding collectd\'s binary protocol', function () {
 
     var defaultMock;
+    var typesMock;
+    var customTypeMock;
 
     /*jshint -W117 */
     before(function () {
@@ -18,6 +20,46 @@ describe('When decoding collectd\'s binary protocol', function () {
             plugin: 'GenericJMX',
             plugin_instance: 'MemoryPool|Eden_Space',
             type: 'memory',
+            type_instance: 'committed',
+            dstypes: [ 'gauge' ],
+            values: [ 152567808.92 ],
+            dsnames: [ 'value' ]
+        }];
+
+        typesMock = [
+            {
+                host: 'localhost',
+                time: 1445108447,
+                interval: 10,
+                plugin: 'interface',
+                plugin_instance: 'eth0',
+                type: 'if_octets',
+                type_instance: '',
+                dstypes: ['derive', 'derive'],
+                values: [1175716173359, 3666029034357],
+                dsnames: ['rx', 'tx']
+            },
+            {
+                "host": "localhost",
+                "time": 1445108447,
+                "interval": 10,
+                "plugin": "load",
+                "plugin_instance": "",
+                "type": "load",
+                "type_instance": "",
+                "values": [0.02, 0.21, 0.3],
+                "dstypes": ["gauge", "gauge", "gauge"],
+                "dsnames": ["shortterm", "midterm", "longterm"]
+            }
+        ];
+
+        customTypeMock = [{
+            host: 'localhost',
+            time: 1455098772,
+            interval: 10,
+            plugin: 'GenericJMX',
+            plugin_instance: 'MemoryPool|Eden_Space',
+            type: 'custom',
             type_instance: 'committed',
             dstypes: [ 'gauge' ],
             values: [ 152567808.92 ],
@@ -238,13 +280,13 @@ describe('When decoding collectd\'s binary protocol', function () {
     });
 
     it('should not throw when input is undefined', function () {
-        var defaultMock = [{
-            invalid: 'localhost'
-        }];
+        assert.doesNotThrow(function () {
+            decoder.decode(undefined);
+        });
+    });
 
-        var binaryData = encoder.encode(defaultMock);
-
-        var result = decoder.decode(binaryData);
+    it('should not throw when input is an invalid buffer', function (done) {
+        var result = decoder.decode('|\\sw>!@,[]/%*.');
 
         var decoded;
         result.on('data', function(data) {
@@ -253,14 +295,31 @@ describe('When decoding collectd\'s binary protocol', function () {
             done();
         });
     });
+    
+    it('should decode metrics with types from types.db specification', function(done) {
+        var binaryData = encoder.encode(typesMock);
 
-    it('should not throw when input is an invalid buffer', function () {
-        var result = decoder.decode('|\\sw>!@,[]/%*.');
+        var result = decoder.decode(binaryData);
 
         var decoded;
         result.on('data', function(data) {
             decoded = data;
-        }).on('error', function () {
+        }).on('end', function () {
+            assert.deepEqual(decoded, typesMock);
+            done();
+        });
+    });
+
+    it('should decode metrics with custom types not in types.db specification', function(done) {
+        var binaryData = encoder.encode(customTypeMock);
+
+        var result = decoder.decode(binaryData);
+
+        var decoded;
+        result.on('data', function(data) {
+            decoded = data;
+        }).on('end', function () {
+            assert.deepEqual(decoded, customTypeMock);
             done();
         });
     });
