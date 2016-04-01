@@ -4,7 +4,7 @@ var assert = require('chai').assert;
 
 var subject = require('../src/converters');
 
-describe('When decoding collectd\'s binary protocol', function () {
+describe('When converting stuff using collectd\'s binary protocol', function () {
 
     var MAX_INT = 9223372034707292159;
     var MIN_INT = -9223372034707292159;

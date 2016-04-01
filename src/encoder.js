@@ -1,8 +1,17 @@
 'use strict';
 
+var assign = require('lodash/assign');
+var findKey = require('lodash/findKey');
+var matches = require('lodash/matches');
+var isUndefined = require('lodash/isUndefined');
+
 var ctype = require('ctype');
 var definition = require('./definition');
 var converters = require('./converters');
+var customPartValidator = require('./custom-part-validator');
+
+// Initialize custom parts configuration, which by default is empty
+var customStringParts = {};
 
 /**
  * Encodes a part header.
@@ -281,6 +290,38 @@ function isAttributeValid(partType) {
 }
 
 /**
+ *
+ * @param partType
+ */
+function getTypeCodeFromName(partType) {
+    var typeCode = converters.getTypeCodeFromName(partType);
+
+    if (isUndefined(typeCode)) {
+        var customTypeCode = findKey(customStringParts, matches(partType));
+
+        if (!isUndefined(customTypeCode)) {
+            typeCode = parseInt(customTypeCode);
+        }
+    }
+
+    return typeCode;
+}
+
+/**
+ *
+ * @param partType
+ */
+function getPartEncoderFromPartType(partType) {
+    var encoder = getPartEncoder(partType);
+
+    if (isUndefined(encoder)) {
+        encoder = encodeString;
+    }
+
+    return encoder;
+}
+
+/**
  * Encodes a type from the specified metric.
  *
  * @param partType The part type of the metric to encode
@@ -288,10 +329,10 @@ function isAttributeValid(partType) {
  * @returns {Buffer} The constructed buffer with the encoded part
  */
 function encodeMetric(partType, metric) {
-    var type = converters.getTypeCodeFromName(partType);
-    var encoder = getPartEncoder(partType);
+    var type = getTypeCodeFromName(partType);
+    var encoder = getPartEncoderFromPartType(partType);
 
-    if (undefined === encoder || undefined === type) {
+    if (isUndefined(encoder) || isUndefined(type)) {
         throw (new Error('Invalid part type found: ' + partType));
     }
 
@@ -327,13 +368,12 @@ function encodeMetrics(metrics) {
 }
 
 /**
- * Encodes an array of metrics to the collectd's binary protocol. Please reference to:
- * {@link https://collectd.org/wiki/index.php/Binary_protocol}
+ * Encoder function.
  *
- * @param metrics The array of metrics to encode
- * @returns {Buffer} The constructed buffer with the encoded metrics
+ * @param metrics An array of metrics to encode to Collectd's binary protocol
+ * @returns {*} An encoded buffer
  */
-exports.encode = function (metrics) {
+function encode(metrics) {
     var buffer;
 
     try {
@@ -347,4 +387,41 @@ exports.encode = function (metrics) {
     }
 
     return buffer;
+}
+
+/**
+ * Configures the passed custom parts to encode.
+ *
+ * @param customPartsConfig A custom parts configuration object
+ */
+function configureCustomParts(customPartsConfig) {
+    var isValid = customPartValidator.validateCustomPartsConfig(customPartsConfig);
+
+    if (isValid) {
+        assign(customStringParts, customPartsConfig);
+    }
+}
+
+/**
+ * Encodes an array of metrics to the collectd's binary protocol. Please reference to:
+ * {@link https://collectd.org/wiki/index.php/Binary_protocol}
+ *
+ * @param metrics The array of metrics to encode
+ * @returns {Buffer} The constructed buffer with the encoded metrics
+ */
+exports.encode = encode;
+
+/**
+ *
+ * @param metrics
+ * @param customPartsConfig
+ * @returns {*}
+ */
+exports.encodeCustom = function(metrics, customPartsConfig) {
+
+    if (!isUndefined(customPartsConfig)) {
+        configureCustomParts(customPartsConfig);
+    }
+
+    return encode(metrics);
 };

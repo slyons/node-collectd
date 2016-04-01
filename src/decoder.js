@@ -6,11 +6,17 @@ var Q = require('q');
 
 var clone = require('lodash/clone');
 var fill = require('lodash/fill');
+var assign = require('lodash/assign');
+var isUndefined = require('lodash/isUndefined');
 
 var ctype = require('ctype');
 var definition = require('./definition');
 var converters = require('./converters');
 var types = require('../metadata/typesdb.json');
+var customPartValidator = require('./custom-part-validator');
+
+// Initialize custom parts configuration, which by default is empty
+var customStringParts = {};
 
 /**
  * Decodes the part header.
@@ -339,6 +345,17 @@ function addValuesToMetric(metric, values) {
 }
 
 /**
+ * Initializes a new metric before start decoding the metric.
+ *
+ * @param metricsArray The global metrics array
+ * @returns {*} A new initialized metric
+ */
+function initializeMetric(metricsArray) {
+    metricsArray.push({});
+    return metricsArray[metricsArray.length - 1];
+}
+
+/**
  * Returns a parts decoder based on the passed part type.
  *
  * @param partType The part type code
@@ -363,14 +380,48 @@ function getPartDecoder(partType) {
     return decoders[partType];
 }
 
-/**
- * Returns true if the specified header belongs to a value type.
- *
- * @param header The header to check
- * @returns {boolean} True if the header is from a value type, false otherwise
- */
 function isValueType(header) {
     return header.type === definition.TYPE_VALUES;
+}
+
+function isHostType(header) {
+    return header.type === definition.TYPE_HOST;
+}
+
+/**
+ * Returns true if the specified header type is a configured string part.
+ *
+ * @param headerType The header type to check
+ * @returns {boolean} True if the custom part is configured, false otherwise
+ */
+function customStringPartIsConfigured(headerType) {
+    return !isUndefined(customStringParts[headerType]);
+}
+
+/**
+ * Returns a part decoder from the specified header type.
+ *
+ * @param headerType The header type to check
+ */
+function getPartDecoderFromHeaderType(headerType) {
+    var decoder = getPartDecoder(headerType);
+
+    if (isUndefined(decoder)) {
+        if (customStringPartIsConfigured(headerType)) {
+            decoder = decodeStringPart;
+        }
+    }
+    return decoder;
+}
+
+/**
+ * Returns the type name from the specified header type.
+ *
+ * @param headerType The header type to check
+ * @returns {*} A string representing the type name
+ */
+function getTypeNameFromHeaderType(headerType) {
+    return converters.getTypeNameFromCode(headerType) || customStringParts[headerType];
 }
 
 /**
@@ -386,9 +437,9 @@ function decodePart(metrics, metric, header, buffer, offset) {
     var deferred = Q.defer();
 
     setImmediate(function() {
-        var decoder = getPartDecoder(header.type);
+        var decoder = getPartDecoderFromHeaderType(header.type);
 
-        if (typeof decoder === 'undefined') {
+        if (isUndefined(decoder)) {
             deferred.reject(new Error('No handler for type ' + header.type));
             return;
         }
@@ -397,10 +448,9 @@ function decodePart(metrics, metric, header, buffer, offset) {
             .then(function(decoded) {
                 if (isValueType(header)) {
                     addValuesToMetric(metric, decoded);
-                    metrics.push(clone(metric));
                 } else {
-                    var typeName = converters.getTypeNameFromCode(header.type);
-                    if (typeof typeName === 'undefined') {
+                    var typeName = getTypeNameFromHeaderType(header.type);
+                    if (isUndefined(typeName)) {
                         deferred.reject(new Error('No type name found for: ' + header.type));
                         return;
                     }
@@ -422,9 +472,26 @@ function isHeaderEmpty(header) {
     return header.length === 0;
 }
 
-function Decoder(buffer) {
+/**
+ * Configures the passed custom parts to decode.
+ *
+ * @param customPartsConfig A custom parts configuration object
+ */
+function configureCustomParts(customPartsConfig) {
+    var isValid = customPartValidator.validateCustomPartsConfig(customPartsConfig);
+
+    if (isValid) {
+        assign(customStringParts, customPartsConfig);
+    }
+}
+
+function Decoder(buffer, customPartsConfig) {
     if (!(this instanceof Decoder)) {
-        return new Decoder(buffer);
+        return new Decoder(buffer, customPartsConfig);
+    }
+
+    if (!isUndefined(customPartsConfig)) {
+        configureCustomParts(customPartsConfig);
     }
 
     Readable.call(this, {objectMode: true});
@@ -433,7 +500,7 @@ function Decoder(buffer) {
     this._metric = {};
     this._offset = 0;
 
-    if(buffer !== undefined) {
+    if (buffer !== undefined) {
         this._bufferLength = buffer.length;
         this._buffer = buffer;
     } else {
@@ -452,6 +519,10 @@ Decoder.prototype._read = function() {
                     if (isHeaderEmpty(header)) {
                         self.emit('error', new Error('Unable to decode. Invalid message?'));
                         return;
+                    }
+
+                    if (isHostType(header)) {
+                        self._metric = initializeMetric(self._metrics);
                     }
 
                     decodePart(self._metrics, self._metric, header, self._buffer, self._offset)
@@ -480,4 +551,14 @@ Decoder.prototype._read = function() {
  */
 exports.decode = function(buffer) {
     return new Decoder(buffer);
+};
+
+/**
+ *
+ * @param buffer
+ * @param customPartsConfig
+ * @returns {Decoder}
+ */
+exports.decodeCustom = function (buffer, customPartsConfig) {
+    return new Decoder(buffer, customPartsConfig);
 };

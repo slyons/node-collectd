@@ -323,4 +323,36 @@ describe('When decoding collectd\'s binary protocol', function () {
             done();
         });
     });
+
+    it('should decode metrics standard metrics with configured custom parts', function (done) {
+
+        var customTypeMock = [{
+            host: 'localhost',
+            time: 1455098772,
+            interval: 10,
+            plugin: 'GenericJMX',
+            plugin_instance: 'MemoryPool|Eden_Space',
+            type: 'custom',
+            type_instance: 'committed',
+            dstypes: [ 'gauge' ],
+            values: [ 152567808.92 ],
+            dsnames: [ 'value' ],
+            tags: 'host=localhost,cluster=dev'
+        }];
+
+        var customPartConfig = { 0x0099: 'tags' };
+
+        var binaryData = encoder.encodeCustom(customTypeMock, customPartConfig);
+
+        var result = decoder.decodeCustom(binaryData, customPartConfig);
+
+        var decoded;
+        result.on('data', function(data) {
+            decoded = data;
+            console.log(decoded);
+        }).on('end', function () {
+            assert.deepEqual(decoded, customTypeMock);
+            done();
+        });
+    });
 });

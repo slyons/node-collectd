@@ -46,6 +46,9 @@ collectd-protocol
     
   * 0.2.0
     - Add support the data-set specifications (types.db)
+    
+  * 0.3.0
+    - Add support for custom part encoding and decoding (not compliant with binary protocol)
 
 [npm-url]: https://npmjs.org/package/collectd-protocol
 [npm-image]: https://badge.fury.io/js/collectd-protocol.svg
