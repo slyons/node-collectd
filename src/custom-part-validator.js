@@ -1,7 +1,5 @@
 'use strict';
 
-var Q = require('q');
-
 var isObjectLike = require('lodash/isObjectLike');
 var isNil = require('lodash/isNil');
 var isNumber = require('lodash/isNumber');

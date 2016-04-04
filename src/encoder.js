@@ -11,7 +11,7 @@ var converters = require('./converters');
 var customPartValidator = require('./custom-part-validator');
 
 // Initialize custom parts configuration, which by default is empty
-var customStringParts = {};
+var customStringParts;
 
 /**
  * Encodes a part header.
@@ -399,6 +399,8 @@ function configureCustomParts(customPartsConfig) {
 
     if (isValid) {
         assign(customStringParts, customPartsConfig);
+    } else {
+        console.error('Invalid custom parts configuration: ' + customPartsConfig);
     }
 }
 
@@ -419,6 +421,7 @@ exports.encode = encode;
  */
 exports.encodeCustom = function(metrics, customPartsConfig) {
 
+    customStringParts = {};
     if (!isUndefined(customPartsConfig)) {
         configureCustomParts(customPartsConfig);
     }
