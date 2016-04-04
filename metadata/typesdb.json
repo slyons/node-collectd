@@ -1,0 +1,882 @@
+{
+  "apache_bytes": [
+    {
+      "dsname": "count",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 134217728
+   }
+  ],
+  "apache_connections": [{
+    "dsname": "count",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 65535
+  }],
+  "apache_requests": [{
+    "dsname": "count",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 134217728
+  }],
+  "apache_scoreboard": [{
+    "dsname": "count",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 65535
+  }],
+  "bitrate": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 4294967295
+  }],
+  "bytes": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": "U"
+  }],
+  "cache_result": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 4294967295
+  }],
+  "cache_size": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 4294967295
+  }],
+  "charge": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": "U"
+  }],
+  "connections": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": "U"
+  }],
+  "counter": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": "U",
+    "max": "U"
+  }],
+  "cpufreq": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": "U"
+  }],
+  "cpu": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 4294967295
+  }],
+  "current": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": "U",
+    "max": "U"
+  }],
+  "delay": [{
+    "dsname": "seconds",
+    "dstype": "GAUGE",
+    "min": -1000000,
+    "max": 1000000
+  }],
+  "df": [
+    {
+      "dsname": "used",
+      "dstype": "GAUGE",
+      "min": 0,
+      "max": 1125899906842623
+    },
+    {
+      "dsname": "free",
+      "dstype": "GAUGE",
+      "min": 0,
+      "max": 1125899906842623
+    }
+  ],
+  "disk_merged": [
+    {
+      "dsname": "read",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    },
+    {
+      "dsname": "write",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    }
+  ],
+  "disk_octets": [
+    {
+      "dsname": "read",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 17179869183
+    },
+    {
+      "dsname": "write",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 17179869183
+    }
+  ],
+  "disk_ops": [
+    {
+      "dsname": "read",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    },
+    {
+      "dsname": "write",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    }
+  ],
+  "disk_time": [
+    {
+      "dsname": "read",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 1000000
+    },
+    {
+      "dsname": "write",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 1000000
+    }
+  ],
+  "dns_answer": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 65535
+  }],
+  "dns_octets": [
+    {
+      "dsname": "queries",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 125000000
+    },
+    {
+      "dsname": "responses",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 125000000
+    }
+  ],
+  "dns_opcode": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 65535
+  }],
+  "dns_qtype": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 65535
+  }],
+  "dns_question": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 65535
+  }],
+  "dns_rcode": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 65535
+  }],
+  "email_check": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": "U"
+  }],
+  "email_count": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": "U"
+  }],
+  "email_size": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": "U"
+  }],
+  "entropy": [{
+    "dsname": "entropy",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 4294967295
+  }],
+  "fanspeed": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": "U"
+  }],
+  "files": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": "U"
+  }],
+  "frequency": [{
+    "dsname": "frequency",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": "U"
+  }],
+  "frequency_offset": [
+    {
+      "dsname": "ppm",
+      "dstype": "GAUGE",
+      "min": -1000000,
+      "max": 1000000
+    }
+  ],
+  "gauge": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": "U",
+    "max": "U"
+  }],
+  "humidity": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 100
+  }],
+  "if_collisions": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 4294967295
+  }],
+  "if_dropped": [
+    {
+      "dsname": "rx",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    },
+    {
+      "dsname": "tx",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    }
+  ],
+  "if_errors": [
+    {
+      "dsname": "rx",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    },
+    {
+      "dsname": "tx",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    }
+  ],
+  "if_multicast": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 4294967295
+  }],
+  "if_octets": [
+    {
+      "dsname": "rx",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    },
+    {
+      "dsname": "tx",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    }
+  ],
+  "if_packets": [
+    {
+      "dsname": "rx",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    },
+    {
+      "dsname": "tx",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    }
+  ],
+  "if_rx_errors": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 4294967295
+  }],
+  "if_tx_errors": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 4294967295
+  }],
+  "io_octets": [
+    {
+      "dsname": "rx",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    },
+    {
+      "dsname": "tx",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    }
+  ],
+  "io_packets": [
+    {
+      "dsname": "rx",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    },
+    {
+      "dsname": "tx",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    }
+  ],
+  "ipt_bytes": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 134217728
+  }],
+  "ipt_packets": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 134217728
+  }],
+  "irq": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": "U",
+    "max": 65535
+  }],
+  "latency": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 65535
+  }],
+  "load": [
+    {
+      "dsname": "shortterm",
+      "dstype": "GAUGE",
+      "min": 0,
+      "max": 100
+    },
+    {
+      "dsname": "midterm",
+      "dstype": "GAUGE",
+      "min": 0,
+      "max": 100
+    },
+    {
+      "dsname": "longterm",
+      "dstype": "GAUGE",
+      "min": 0,
+      "max": 100
+    }
+  ],
+  "memcached_command": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": "U"
+  }],
+  "memcached_connections": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": "U"
+  }],
+  "memcached_items": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": "U"
+  }],
+  "memcached_octets": [
+    {
+      "dsname": "rx",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    },
+    {
+      "dsname": "tx",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    }
+  ],
+  "memcached_ops": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 134217728
+  }],
+  "memory": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 281474976710656
+  }],
+  "multimeter": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": "U",
+    "max": "U"
+  }],
+  "mysql_commands": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": "U"
+  }],
+  "mysql_handler": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": "U"
+  }],
+  "mysql_octets": [
+    {
+    "dsname": "rx",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 4294967295
+    },
+    {
+    "dsname": "tx",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 4294967295
+    }
+  ],
+  "mysql_qcache": [
+    {
+      "dsname": "hits",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": "U"
+    },
+    {
+      "dsname": "inserts",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": "U"
+    },
+    {
+      "dsname": "not_cached",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": "U"
+    },
+    {
+      "dsname": "lowmem_prunes",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": "U"
+    },
+    {
+      "dsname": "queries_in_cache",
+      "dstype": "GAUGE",
+      "min": 0,
+      "max": "U"
+    }
+  ],
+  "mysql_threads": [
+    {
+      "dsname": "running",
+      "dstype": "GAUGE",
+      "min": 0,
+      "max": "U"
+    },
+    {
+      "dsname": "connected",
+      "dstype": "GAUGE",
+      "min": 0,
+      "max": "U"
+    },
+    {
+      "dsname": "cached",
+      "dstype": "GAUGE",
+      "min": 0,
+      "max": "U"
+    },
+    {
+      "dsname": "created",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": "U"
+    }
+  ],
+  "nfs_procedure": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 4294967295
+  }],
+  "nginx_connections": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": "U"
+  }],
+  "nginx_requests": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 134217728
+  }],
+  "operations": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 4294967295
+  }],
+  "percent": [{
+    "dsname": "percent",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 100.1
+  }],
+  "pg_blks": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": "U"
+  }],
+  "pg_db_size": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": "U"
+  }],
+  "pg_n_tup_c": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": "U"
+  }],
+  "pg_n_tup_g": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": "U"
+  }],
+  "pg_numbackends": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": "U"
+  }],
+  "pg_scan": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": "U"
+  }],
+  "pg_xact": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": "U"
+  }],
+  "ping": [{
+    "dsname": "ping",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 65535
+  }],
+  "players": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 1000000
+  }],
+  "power": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": "U"
+  }],
+  "ps_count": [
+    {
+      "dsname": "processes",
+      "dstype": "GAUGE",
+      "min": 0,
+      "max": 1000000
+    },
+    {
+      "dsname": "threads",
+      "dstype": "GAUGE",
+      "min": 0,
+      "max": 1000000
+    }
+  ],
+  "ps_cputime": [
+    {
+      "dsname": "user",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 16000000
+    },
+    {
+      "dsname": "syst",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 16000000
+    }
+  ],
+  "ps_pagefaults": [
+    {
+      "dsname": "minflt",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 9223372036854775807
+    },
+    {
+      "dsname": "majflt",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 9223372036854775807
+    }
+  ],
+  "ps_rss": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 9223372036854775807
+  }],
+  "ps_state": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 65535
+  }],
+  "queue_length": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": "U"
+  }],
+  "serial_octets": [
+    {
+      "dsname": "rx",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    },
+    {
+      "dsname": "tx",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    }
+  ],
+  "signal_noise": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": "U",
+    "max": 0
+  }],
+  "signal_power": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": "U",
+    "max": 0
+  }],
+  "signal_quality": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": "U"
+  }],
+  "spam_check": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": "U"
+  }],
+  "spam_score": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": "U",
+    "max": "U"
+  }],
+  "swap": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 1099511627776
+  }],
+  "tcp_connections": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 4294967295
+  }],
+  "temperature": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": "-273.15",
+    "max": "U"
+  }],
+  "time_dispersion": [{
+    "dsname": "seconds",
+    "dstype": "GAUGE",
+    "min": -1000000,
+    "max": 1000000
+  }],
+  "timeleft": [{
+    "dsname": "timeleft",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 3600
+  }],
+  "time_offset": [{
+    "dsname": "seconds",
+    "dstype": "GAUGE",
+    "min": -1000000,
+    "max": 1000000
+  }],
+  "users": [{
+    "dsname": "users",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 65535
+  }],
+  "virt_cpu_total": [{
+    "dsname": "ns",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 256000000000
+  }],
+  "virt_vcpu": [{
+    "dsname": "ns",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 1000000000
+  }],
+  "vmpage_action": [{
+    "dsname": "value",
+    "dstype": "COUNTER",
+    "min": 0,
+    "max": 4294967295
+  }],
+  "vmpage_faults": [
+    {
+      "dsname": "minflt",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 9223372036854775807
+    },
+    {
+      "dsname": "majflt",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 9223372036854775807
+    }
+  ],
+  "vmpage_io": [
+    {
+      "dsname": "in",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    },
+    {
+      "dsname": "out",
+      "dstype": "COUNTER",
+      "min": 0,
+      "max": 4294967295
+    }
+  ],
+  "vmpage_number": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 4294967295
+  }],
+  "voltage_threshold": [
+    {
+      "dsname": "value",
+      "dstype": "GAUGE",
+      "min": "U",
+      "max": "U"
+    },
+    {
+      "dsname": "threshold",
+      "dstype": "GAUGE",
+      "min": "U",
+      "max": "U"
+    }
+  ],
+  "voltage": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": "U",
+    "max": "U"
+  }],
+  "vs_memory": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 9223372036854775807
+  }],
+  "vs_processes": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 65535
+  }],
+  "vs_threads": [{
+    "dsname": "value",
+    "dstype": "GAUGE",
+    "min": 0,
+    "max": 65535
+  }]
+}

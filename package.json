@@ -1,19 +1,45 @@
 {
   "author": "Scott Lyons <scottalyons@gmail.com>",
-  "name": "collectd",
-  "description": "A NodeJS module for receiving and parsing the CollectD binary protocol",
-  "version": "0.0.1",
+  "contributors": [
+    "Mindera <hello@mindera.com> (http://mindera.com/)"
+  ],
+  "name": "collectd-protocol",
+  "description": "A NodeJS module for parsing the CollectD binary protocol",
+  "version": "0.2.0",
   "repository": {
     "type": "git",
-    "url": "git://github.com/slyons/node-collectd.git"
+    "url": "git://github.com/Mindera/collectd-protocol.git"
   },
   "engines": {
-    "node": "~v0.4.11"
+    "node": ">=0.10"
   },
-  "main": "./lib/collectd",
+  "main": "./collectd-protocol",
+  "scripts": {
+    "test": "grunt test"
+  },
   "dependencies": {
-    "ctype": "0.0.3"
+    "ctype": "git://github.com/brunopalos/node-ctype.git#wsint64-small-ints-fix",
+    "lodash": "^4.3.0",
+    "q": "^1.4.1"
   },
-  "devDependencies": {},
-  "homepage": "https://github.com/slyons/node-collectd"
+  "devDependencies": {
+    "blanket": "^1.2.1",
+    "chai": "^3.5.0",
+    "grunt": "^0.4.5",
+    "grunt-blanket-mocha": "^0.5.0",
+    "grunt-bump": "^0.7.0",
+    "grunt-contrib-clean": "^0.7.0",
+    "grunt-contrib-jshint": "^0.12.0",
+    "grunt-karma": "^0.12.1",
+    "grunt-mocha-cli": "^2.0.0",
+    "grunt-mocha-cov": "^0.4.0",
+    "grunt-mocha-istanbul": "^3.0.1",
+    "istanbul": "^0.4.2",
+    "jshint-stylish": "^2.1.0",
+    "karma": "^0.13.19",
+    "load-grunt-tasks": "^3.4.0",
+    "mocha": "^2.4.5",
+    "time-grunt": "^1.3.0"
+  },
+  "homepage": "https://github.com/Mindera/collectd-protocol"
 }

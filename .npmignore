@@ -1,0 +1,6 @@
+.idea
+coverage
+test
+Gruntfile.js
+.travis.yml
+.jshintrc
